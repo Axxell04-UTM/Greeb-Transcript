@@ -1,15 +1,19 @@
 {
   "expo": {
-    "name": "Greeb-Translate",
-    "slug": "Greeb-Translate",
+    "name": "Greeb-Transcript",
+    "slug": "Greeb-Transcript",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "greebtranslate",
+    "scheme": "greebtranscript",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSSpeechRecognitionUsageDescription": "Allow $(PRODUCT_NAME) to use speech recognition.",
+        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to use the microphone."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,11 +25,9 @@
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.ACCESS_MEDIA_LOCATION",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.ACCESS_MEDIA_LOCATION"
+        "android.permission.RECORD_AUDIO"
       ],
-      "package": "com.draxlerbroyne.GreebTranslate"
+      "package": "com.draxlerbroyne.GreebTranscript"
     },
     "web": {
       "bundler": "metro",
@@ -57,8 +59,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "0fc7d1d0-4822-4819-8867-791dd1e61186"
+        "projectId": "da03b824-5bd1-4974-8457-bfbdc6d80888"
       }
-    }
+    },
+    "owner": "draxlerbroyne"
   }
 }

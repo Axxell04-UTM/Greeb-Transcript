@@ -1,5 +1,5 @@
 {
-  "name": "greeb-translate",
+  "name": "greeb-transcript",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
@@ -17,6 +17,7 @@
     "@react-navigation/elements": "^2.3.8",
     "@react-navigation/native": "^7.1.6",
     "@tamagui/config": "^1.132.10",
+    "@tamagui/lucide-icons": "^1.132.23",
     "expo": "~53.0.22",
     "expo-blur": "~14.1.5",
     "expo-camera": "~16.1.11",
@@ -38,7 +39,7 @@
     "expo-symbols": "~0.4.5",
     "expo-system-ui": "~5.0.11",
     "expo-web-browser": "~14.2.0",
-    "firebase": "^12.1.0",
+    "firebase": "^12.0.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-native": "0.79.6",
@@ -47,6 +48,7 @@
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
+    "react-native-svg": "^15.12.1",
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
     "tamagui": "^1.132.10"
