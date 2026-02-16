@@ -1,81 +1,141 @@
-import { WsMessage } from "@/interface/ws_message";
+import {
+  WSConnectionMessage,
+  WsMessageIn,
+  WsMessageOut,
+  WsMessageServer,
+} from "@/interface/ws_message";
 import { EventEmitter } from "expo";
 
 type WebSocketEvents = {
-    wsState: (connected: boolean) => void;
+  wsState: (connected: boolean) => void;
+  wsMessageTranscript: (message: string) => void;
+  wsMessageServer: (resason: string) => void;
 };
 
 const myEmitter = new EventEmitter<WebSocketEvents>();
 
 export default class WebSocketService {
-    private static instance: WebSocketService;
-    connection: WebSocket | null = null;
-    constructor () {
+  private static instance: WebSocketService;
+  connection: WebSocket | null = null;
+  constructor() {}
 
+  connect(
+    url: string,
+    action: "create" | "join",
+    password: string,
+    alias: string,
+  ) {
+    if (!this.connection) {
+      this.connection = new WebSocket(url);
+    } else {
+      this.connection.close(1012, "Reconectando");
+      this.connection = new WebSocket(url);
     }
 
-    connect (url: string, user: string) {
-        if (!this.connection) {
-            this.connection = new WebSocket(url);
-        } else {
-            this.connection.close(1012, "Reconectando");
-            this.connection = new WebSocket(url);
+    this.connection.onmessage = (e) => {
+      console.log(JSON.parse(e.data));
+      console.log("Message: ", JSON.parse(e.data));
+      const data = JSON.parse(e.data);
+      if (data.content) {
+        const wsMessage: WsMessageIn = data;
+        console.log("wsMessage: ", wsMessage.content);
+        myEmitter.emit("wsMessageTranscript", wsMessage.content);
+      } else {
+        const wsMessageServer: WsMessageServer = data;
+        console.log("wsMessageServer: ", wsMessageServer);
+        if (wsMessageServer.type === "success") {
+          myEmitter.emit("wsState", true);
+          if (this.connection) {
+            this.connection.onclose = (e) => {
+              // console.log("Close: ", e);
+              myEmitter.emit("wsState", false);
+            };
+          }
+          return;
         }
-        
-        this.connection.onmessage = (e) => {
-            console.log("Message: ", e.data);
-            const wsMessage: WsMessage = e.data;
-        }
-        
-        this.connection.onopen = (e) => {
-            myEmitter.emit("wsState", true);
-            console.log("Open: ", e);
-            this.sendMessage({
-                type: "set_user",
-                content: user
-            });
-        };
-        this.connection.onclose = (e) => {
-            console.log("Close: ", e);
-            myEmitter.emit("wsState", false);
-        }
-    }
 
-    disconnect () {
-        if (!this.connection || this.connection.readyState !== this.connection.OPEN) {
-            return;
+        let reason = "A ocurrido un error";
+        if (wsMessageServer.code === "room_not_created") {
+          reason = "La sala no existe";
+        } else if (wsMessageServer.code === "room_exists") {
+          reason = "La sala ya existe";
+        } else if (wsMessageServer.code === "invalid_password") {
+          reason = "Contraseña incorrecta";
+        } else if (wsMessageServer.code === "auth_required") {
+          reason = "Se requiere autenticación";
         }
-        this.connection.close(1000, "Desconexión voluntaria");
-        this.connection.onclose = null;
-        this.connection = null;
-        myEmitter.emit("wsState", false);
-        
-        console.log("Desconexión voluntaria");
-    }
+        myEmitter.emit("wsMessageServer", reason);
+      }
+    };
 
-    async sendMessage (message: WsMessage) {
-        if (!this.connection || this.connection.readyState !== this.connection.OPEN) {
-            // ToastAndroid.show("No hay conexión WS establecida", ToastAndroid.SHORT);
-            console.log("No hay conexión WS establecida");
-            return ;
-        }
-        this.connection.send(JSON.stringify(message));
-    }
+    this.connection.onopen = (e) => {
+      // myEmitter.emit("wsState", true);
+      // console.log("Open: ", e);
+      this.sendMessage({ action: action, password: password, alias: alias });
+    };
+    // this.connection.onclose = (e) => {
+    //   // console.log("Close: ", e);
+    //   myEmitter.emit("wsState", false);
+    // };
+  }
 
-    onState(callback: (connected: boolean) => void) {
-        myEmitter.addListener("wsState", callback);
+  disconnect() {
+    if (
+      !this.connection ||
+      this.connection.readyState !== this.connection.OPEN
+    ) {
+      return;
     }
+    this.connection.close(1000, "Desconexión voluntaria");
+    this.connection.onclose = null;
+    this.connection = null;
+    myEmitter.emit("wsState", false);
 
-    removeStateListener(callback: (connected: boolean) => void) {
-        myEmitter.removeListener("wsState", callback);
-    }
+    console.log("Desconexión voluntaria");
+  }
 
-    static getInstance(): WebSocketService {
-        if (!WebSocketService.instance) {
-            WebSocketService.instance = new WebSocketService();
-        }
-        return WebSocketService.instance;
+  async sendMessage(message: WsMessageOut | WSConnectionMessage) {
+    if (
+      !this.connection ||
+      this.connection.readyState !== this.connection.OPEN
+    ) {
+      // ToastAndroid.show("No hay conexión WS establecida", ToastAndroid.SHORT);
+      console.log("No hay conexión WS establecida");
+      return;
     }
+    this.connection.send(JSON.stringify(message));
+  }
+
+  onState(callback: (connected: boolean) => void) {
+    myEmitter.addListener("wsState", callback);
+  }
+
+  onMessage(callback: (message: string) => void) {
+    myEmitter.addListener("wsMessageTranscript", callback);
+  }
+
+  onMessageServer(callback: (reason: string) => void) {
+    myEmitter.addListener("wsMessageServer", callback);
+  }
+
+  removeStateListener(callback: (connected: boolean) => void) {
+    myEmitter.removeListener("wsState", callback);
+  }
+
+  removeMessageListener(callback: (message: string) => void) {
+    myEmitter.removeListener("wsMessageTranscript", callback);
+  }
+
+  removeMessageServerListener(callback: (reason: string) => void) {
+    myEmitter.removeListener("wsMessageServer", callback);
+  }
+
+  static getInstance(): WebSocketService {
+    if (!WebSocketService.instance) {
+      WebSocketService.instance = new WebSocketService();
+    }
+    return WebSocketService.instance;
+  }
 }
 
 // Código	Significado

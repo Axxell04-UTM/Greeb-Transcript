@@ -1,6 +1,9 @@
 import { config } from "@/tamagui.config";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Crypto from "expo-crypto";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TamaguiProvider, Theme } from "tamagui";
 
@@ -8,17 +11,50 @@ import { TamaguiProvider, Theme } from "tamagui";
 // const tamaguiConfig = createTamagui(config);
 
 export default function RootLayout() {
+  const storeData = async (key: string, value: string) => {
+    try {
+      await AsyncStorage.setItem(key, value);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const getData = async (key: string) => {
+    try {
+      const value = await AsyncStorage.getItem(key);
+      return value;
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  // Estableciendo la ID del usuario
+
+  useEffect(() => {
+    (async () => {
+      if (!(await getData("user-id")) || true) {
+        await storeData("user-id", Crypto.randomUUID().split("-")[4]);
+      }
+    })();
+  }, []);
+
   return (
-    <TamaguiProvider config={config} >
+    <TamaguiProvider config={config}>
       <Theme name="dark_green">
-        <SafeAreaView style={{flex: 1}}>
+        <SafeAreaView style={{ flex: 1 }}>
           <Stack>
-            <Stack.Screen name="index" options={{
-              headerShown: false
-            }} />
-            <Stack.Screen name="settings" options={{
-              headerShown: false
-            }} />
+            <Stack.Screen
+              name="index"
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="settings"
+              options={{
+                headerShown: false,
+              }}
+            />
           </Stack>
         </SafeAreaView>
         <StatusBar style="auto" />

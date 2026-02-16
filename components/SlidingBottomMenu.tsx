@@ -1,0 +1,94 @@
+import { ChevronDown } from "@tamagui/lucide-icons";
+import React, { ReactNode, useEffect } from "react";
+import { Keyboard } from "react-native";
+import {
+  Button,
+  Paragraph,
+  PositionChangeHandler,
+  Sheet,
+  XStack,
+} from "tamagui";
+
+interface SlidingBottomMenuProps {
+  isVisible: boolean;
+  toggleIsVisible: (visible?: boolean) => void;
+  title?: string;
+  snapPoints?: number[];
+  position?: number;
+  initPosition?: number;
+  setPosition?: PositionChangeHandler;
+  children?: ReactNode;
+}
+
+export const SlidingBottomMenu = React.memo(
+  ({
+    isVisible,
+    toggleIsVisible,
+    title,
+    snapPoints = [99, 80, 45],
+    position,
+    initPosition,
+    setPosition,
+    children,
+  }: SlidingBottomMenuProps) => {
+    // const handleBackdropPress = useCallback((callback: () => void) => {
+    //     toggleIsVisible(false);
+    // }, [toggleIsVisible])
+
+    function handleCloseMenu() {
+      // if (!setPosition) return null;
+      // positionChangeHandler(snapPoints.length - 1);
+      toggleIsVisible(false);
+    }
+
+    useEffect(() => {
+      if (typeof initPosition !== "undefined" && setPosition) {
+        if (isVisible) setPosition(initPosition);
+      }
+    }, [isVisible, initPosition, setPosition]);
+
+    if (!isVisible) return null;
+
+    return (
+      <Sheet
+        forceRemoveScrollEnabled
+        dismissOnSnapToBottom
+        open={isVisible}
+        onOpenChange={toggleIsVisible}
+        modal={false}
+        snapPoints={snapPoints}
+        position={position}
+        onPositionChange={setPosition}
+      >
+        <Sheet.Overlay
+          animation={"lazy"}
+          bg={"$shadow4"}
+          onPress={() => Keyboard.dismiss()}
+        />
+        <Sheet.Handle />
+        <Sheet.Frame
+          bg={"$background"}
+          p={30}
+          rounded={"$8"}
+          gap={30}
+          onPress={() => Keyboard.dismiss()}
+        >
+          <XStack items={"center"} gap={10}>
+            <Button
+              rounded={"$12"}
+              p={"$1.5"}
+              chromeless
+              onPress={() => handleCloseMenu()}
+            >
+              <ChevronDown size={"$3"} />
+            </Button>
+            {title && <Paragraph fontSize={18}>{title}</Paragraph>}
+          </XStack>
+          {children}
+        </Sheet.Frame>
+      </Sheet>
+    );
+  },
+);
+
+SlidingBottomMenu.displayName = "SlidingBottomMenu";

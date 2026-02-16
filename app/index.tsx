@@ -1,32 +1,58 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import { ChevronDown, CircleCheck, CircleX, LogIn, Menu, UserCircle2 } from "@tamagui/lucide-icons";
+import { Menu, UserCircle2 } from "@tamagui/lucide-icons";
 import { useEffect, useRef, useState } from "react";
-import { Button, Input, Paragraph, ScrollView, Sheet, Switch, XStack, YStack } from "tamagui";
+import { Button, Paragraph, ScrollView, XStack, YStack } from "tamagui";
 
 import WebSocketService from "@/services/WebSocketService";
+import { PrimarySlidingMenu } from "@/UI/Index/PrimarySlidingMenu";
+import { QRSlidingMenu } from "@/UI/Index/QRSlidingMenu";
+import { ScanSlidingMenu } from "@/UI/Index/ScanSlidingMenu";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from "expo-speech-recognition";
+import {
+  ExpoSpeechRecognitionModule,
+  useSpeechRecognitionEvent,
+} from "expo-speech-recognition";
 import { ToastAndroid } from "react-native";
 
 export default function Index() {
-  const [ micOn, setMicOn ] = useState(false);
-  const [ recognizing, setRecognizing ] = useState(false);
-  const [ transcript, setTranscript ] = useState("");
-  const [ listTranscript, setListTranscript ] = useState<string[]>([]);
-  const [ countRec, setCountRec ] = useState(0);
-  
-  // Sidebar
-  const [ sheetOpen, setSheetOpen ] = useState(false);
-  const [ position, setPosition ] = useState(0);
-  
+  const [micOn, setMicOn] = useState(false);
+  const [recognizing, setRecognizing] = useState(false);
+  const [transcript, setTranscript] = useState("");
+  const [listTranscript, setListTranscript] = useState<string[]>([]);
+  const [listMessageTranscript, setListMessageTranscript] = useState<string[]>(
+    [],
+  );
+
+  // User
+  const [userID, setUserID] = useState("");
+
+  const [countRec, setCountRec] = useState(0);
+
+  // Sliding Menus
+  const [primarySlidingMenuIsVisible, setPrimarySlidingMenuIsVisible] =
+    useState(false);
+  const [QRSlidingMenuIsVisible, setQRSlidingMenuIsVisible] = useState(false);
+  const [scanSlidingMenuIsVisible, setScanSlidingMenuIsVisible] =
+    useState(false);
+
   // Ajustes
-  const [ autoScroll, setAutoScroll ] = useState(true);
-  
+  const [autoScroll, setAutoScroll] = useState(true);
+
   const scrollViewRef = useRef<ScrollView>(null);
   // WebSocket
-  const [ wsURL, setWsURL ] = useState("https://eb126a895bf2.ngrok-free.app/ws")
-  const [ wsService, setWsService ] = useState(WebSocketService.getInstance());
-  const [ wsConnected, setWsConnected ] = useState(false);
+  const [roomName, setRoomName] = useState("");
+  const [roomPass, setRoomPass] = useState("");
+  const [alias, setAlias] = useState("");
+  const [wsURL, setWsURL] = useState(
+    `https://74a8-2800-bf0-2825-55-7577-283e-fed0-8fbb.ngrok-free.app/rooms/`,
+  );
+  const [roomNameQR, setRoomNameQR] = useState<any>();
+
+  const [wsService, setWsService] = useState(WebSocketService.getInstance());
+  const [wsConnected, setWsConnected] = useState(false);
+
+  const [scanResult, setScanResult] = useState("");
 
   // Enrutador
   const router = useRouter();
@@ -42,8 +68,7 @@ export default function Index() {
     if (e.isFinal) {
       setListTranscript([...listTranscript, e.results[0]?.transcript]);
       wsService.sendMessage({
-        type: "message",
-        content: e.results[0]?.transcript
+        text: e.results[0]?.transcript,
       });
     }
   });
@@ -52,30 +77,30 @@ export default function Index() {
     if (micOn) {
       recStart();
     }
-  })
-  
+  });
+
   // Funciones
-  function openMic () {
+  function openMic() {
     setMicOn(true);
     handleStart();
     setRecognizing(true);
   }
-  
-  function closeMic () {
+
+  function closeMic() {
     setMicOn(false);
     ExpoSpeechRecognitionModule.stop();
     setRecognizing(false);
   }
 
-  function recStart () {
+  function recStart() {
     ExpoSpeechRecognitionModule.start({
       lang: "es-CO",
       interimResults: true,
-      continuous: false,   
-    })
+      continuous: false,
+    });
   }
 
-  async function handleStart () {
+  async function handleStart() {
     const result = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
     if (!result.granted) {
       console.log("Permissions not granted", result);
@@ -84,7 +109,37 @@ export default function Index() {
     recStart();
   }
 
-  function toggleAutoScroll (value?: boolean) {
+  function goToSettings() {
+    router.push("/settings");
+  }
+
+  function connectWs(action: "create" | "join") {
+    if (!wsURL) {
+      ToastAndroid.show("Se necesita la URL del servidor", ToastAndroid.SHORT);
+      return;
+    } else if (!roomName) {
+      ToastAndroid.show("Nombre de sala necesario", ToastAndroid.SHORT);
+      return;
+    } else if (!roomPass) {
+      ToastAndroid.show("Contraseña de sala necesaria", ToastAndroid.SHORT);
+      return;
+    } else if (!alias) {
+      ToastAndroid.show("Alias necesario", ToastAndroid.SHORT);
+      return;
+    }
+
+    wsService.connect(wsURL, action, roomPass, alias);
+  }
+
+  function disconnectWs() {
+    if (!wsURL) {
+      return;
+    }
+    wsService.disconnect();
+  }
+
+  // Toggle Functions
+  function toggleAutoScroll(value?: boolean) {
     if (value !== undefined) {
       setAutoScroll(value);
     } else {
@@ -92,19 +147,38 @@ export default function Index() {
     }
   }
 
-  function goToSettings () {
-    router.push("/settings");
+  function togglePrimarySlidingMenuIsVisible(visible?: boolean) {
+    if (visible !== undefined) {
+      setPrimarySlidingMenuIsVisible(visible);
+    } else {
+      setPrimarySlidingMenuIsVisible((prev) => !prev);
+    }
   }
 
-  function connectWs () {
-    if (!wsURL) { return };
-    wsService.connect(wsURL, "Axxell04");
+  function toggleQRSlidingMenuIsVisible(visible?: boolean) {
+    if (visible !== undefined) {
+      setQRSlidingMenuIsVisible(visible);
+    } else {
+      setQRSlidingMenuIsVisible((prev) => !prev);
+    }
   }
 
-  function disconnectWs () {
-    if (!wsURL) { return };
-    wsService.disconnect();
+  function toggleScanSlidingMenuIsVisible(visible?: boolean) {
+    if (visible !== undefined) {
+      setScanSlidingMenuIsVisible(visible);
+    } else {
+      setScanSlidingMenuIsVisible((prev) => !prev);
+    }
   }
+
+  // Actualizando la sala para la conexión WS
+  useEffect(() => {
+    setWsURL((prevWsURL) => {
+      let r = prevWsURL.split("/");
+      r[r.length - 1] = encodeURIComponent(roomName);
+      return r.join("/");
+    });
+  }, [roomName]);
 
   useEffect(() => {
     if (scrollViewRef) {
@@ -123,184 +197,169 @@ export default function Index() {
           ToastAndroid.show("Conexión terminada", ToastAndroid.SHORT);
         }
       };
+
+      const handleMessage = (message: string) => {
+        setListMessageTranscript((prev) => [...prev, message]);
+        console.log(message);
+      };
+
+      const handleMessageServer = (reason: string) => {
+        ToastAndroid.show(reason, ToastAndroid.SHORT);
+      };
+
       wsService.onState(handleState);
+      wsService.onMessage(handleMessage);
+      wsService.onMessageServer(handleMessageServer);
       return () => {
         wsService.removeStateListener(handleState);
-      }
+        wsService.removeMessageListener(handleMessage);
+        wsService.removeMessageServerListener(handleMessageServer);
+      };
     }
-  }, [wsService])
+  }, [wsService]);
+
+  useEffect(() => {
+    const getData = async (key: string) => {
+      try {
+        const value = await AsyncStorage.getItem(key);
+        return value;
+      } catch (e) {
+        console.log(e);
+      }
+    };
+    (async () => {
+      const id = await getData("user-id");
+      setUserID(id ?? "XXXX-XXXX");
+    })();
+  }, []);
+
+  useEffect(() => {
+    console.log("ScanRes: " + scanResult);
+    if (scanResult) {
+      const results = scanResult.split(";");
+      setRoomName(results[0]);
+      setRoomPass(results[1]);
+    }
+  }, [scanResult]);
 
   return (
     <>
-    <YStack bg={"$background"} flex={1} justify="center" items="center">
-      <XStack p={10} width={"100%"} justify={"space-between"}>
-        <Button
-          icon={<UserCircle2 size={30} />}
-          chromeless
-        >
-          Invitado
-        </Button>
-        <Button 
-          icon={<Menu size={30} />}
-          p={5}
-          onPress={() => setSheetOpen(true)}
-        >
-        </Button>
-      </XStack>
-      <YStack items={"center"} gap={10}>
-        <Paragraph fontSize={20}>
-          Greeb Transcript
-        </Paragraph>
-      </YStack>
-      <YStack gap={20} items={"center"}>
-        <Paragraph color={"$colorHover"}>
-          Resultados
-        </Paragraph>
-        <Paragraph text={"center"}>
-          {transcript === "" ? "..." : transcript}
-        </Paragraph>
-      </YStack>
-      <YStack flex={1} gap={20} items={"center"} width={"100%"} p={20}>
-        <Paragraph color={"$colorHover"}>
-          Lista de Resultados
-        </Paragraph>
-        <YStack p={10} flex={1} bg={"$borderColorHover"} rounded={"$4"} width={"100%"}>
-          <ScrollView overflow="hidden" ref={scrollViewRef}>
-            <YStack gap={10} overflow="hidden" display="flex" flexDirection="row" flexWrap="wrap">
-              {listTranscript.map((t, index) => 
-                <Paragraph display="block" key={index} bg={"$background"} px={6} rounded={"$2"}>{t}</Paragraph>
-              )}
-            </YStack>
-          </ScrollView>
+      <YStack bg={"$background"} flex={1} justify="center" items="center">
+        <XStack p={10} width={"100%"} justify={"space-between"}>
+          <Button icon={<UserCircle2 size={30} />} chromeless>
+            Invitado
+          </Button>
+          <Button
+            icon={<Menu size={30} />}
+            p={5}
+            onPress={() => {
+              // setSheetOpen(true)
+              togglePrimarySlidingMenuIsVisible(true);
+            }}
+          ></Button>
+        </XStack>
+        <YStack items={"center"} gap={10}>
+          <Paragraph fontSize={20}>Greeb Transcript</Paragraph>
+        </YStack>
+        <YStack gap={20} items={"center"}>
+          <Paragraph color={"$colorHover"}>Resultados</Paragraph>
+          <Paragraph text={"center"}>
+            {transcript === "" ? "..." : transcript}
+          </Paragraph>
+        </YStack>
+        <YStack flex={1} gap={20} items={"center"} width={"100%"} p={20}>
+          <Paragraph color={"$colorHover"}>Lista de Resultados</Paragraph>
+          <YStack
+            p={10}
+            flex={1}
+            bg={"$borderColorHover"}
+            rounded={"$4"}
+            width={"100%"}
+          >
+            <ScrollView overflow="hidden" ref={scrollViewRef}>
+              <YStack
+                gap={10}
+                overflow="hidden"
+                display="flex"
+                flexDirection="row"
+                flexWrap="wrap"
+              >
+                {listMessageTranscript.map((t, index) => (
+                  <Paragraph
+                    display="block"
+                    key={index}
+                    bg={"$background"}
+                    px={6}
+                    rounded={"$2"}
+                  >
+                    {t}
+                  </Paragraph>
+                ))}
+              </YStack>
+            </ScrollView>
+          </YStack>
+        </YStack>
+        <YStack items={"center"} p={30} gap={10}>
+          <Button
+            p={10}
+            borderWidth={2}
+            borderColor={recognizing ? "lime" : "transparent"}
+            icon={
+              recognizing ? (
+                <MaterialIcons name="mic" size={50} />
+              ) : (
+                <MaterialIcons name="mic-off" size={50} />
+              )
+            }
+            height={"auto"}
+            rounded={9999}
+            onPress={micOn ? closeMic : openMic}
+          ></Button>
+          <Button
+            p={10}
+            borderWidth={2}
+            icon={<MaterialIcons name="settings" size={30} />}
+            height={"auto"}
+            rounded={9999}
+            onPress={goToSettings}
+            opacity={0.8}
+          ></Button>
         </YStack>
       </YStack>
-      <YStack items={"center"} p={30} gap={10}>
-        <Button p={10}
-          borderWidth={2}
-          borderColor={recognizing ? "lime" : "transparent"}
-          icon={recognizing 
-            ? <MaterialIcons name="mic" size={50} />
-            : <MaterialIcons name="mic-off" size={50} />
-          }
-          height={"auto"}
-          rounded={9999}
-          onPress={micOn ? closeMic : openMic}
-        >
 
-        </Button>
-        <Button p={10}
-          borderWidth={2}
-          icon={<MaterialIcons name="settings" size={30} />}
-          height={"auto"}
-          rounded={9999}
-          onPress={goToSettings}
-          opacity={.8}
-        >
+      {/* Sliding Menus */}
+      <PrimarySlidingMenu
+        isVisible={primarySlidingMenuIsVisible}
+        toggleIsVisible={togglePrimarySlidingMenuIsVisible}
+        roomName={roomName}
+        roomPass={roomPass}
+        alias={alias}
+        autoScroll={autoScroll}
+        connectWs={connectWs}
+        disconnectWs={disconnectWs}
+        setRoomName={setRoomName}
+        setRoomPass={setRoomPass}
+        setAlias={setAlias}
+        toggleAutoScroll={toggleAutoScroll}
+        wsConnected={wsConnected}
+        toggleQRIsVisible={toggleQRSlidingMenuIsVisible}
+        toggleScanIsVisible={toggleScanSlidingMenuIsVisible}
+      />
 
-        </Button>
-      </YStack>
-    </YStack>
-    <Sheet 
-      forceRemoveScrollEnabled
-      dismissOnSnapToBottom
-      open={sheetOpen}
-      onOpenChange={setSheetOpen}
-      modal={false}
-      snapPoints={[80]}
-      position={position}
-      onPositionChange={setPosition}
-          
-    >
-          <Sheet.Overlay 
-            animation={"lazy"}
-            bg={"$shadow4"}
-          />
-          <Sheet.Handle />
-          <Sheet.Frame 
-            bg={"$background"}
-            p={30}
-            rounded={"$8"}
-            gap={30}
-          >
-            <XStack items={"center"} gap={10}>
-              <UserCircle2 size={30} />
-              <Paragraph fontSize={18}>
-                Invitado
-              </Paragraph>
-            </XStack>
-            <YStack gap={10} borderWidth={1} borderColor={"$borderColorHover"} p={10} rounded={"$4"}>
-              <Paragraph color={"$color08"}>
-                Ajustes
-              </Paragraph>
-              <XStack gap={20} items={"center"}>
-                <Paragraph>
-                  Auto-Scroll
-                </Paragraph>
-                <Switch 
-                  bg={autoScroll ? "$colorFocus" : "$background"} 
-                  checked={autoScroll} 
-                  onCheckedChange={(c) => toggleAutoScroll(c)}
-                >
-                  <Switch.Thumb animation={"quicker"} />
-                </Switch>
-              </XStack>
-              <YStack gap={20}>
-                <XStack items={"center"} gap={5}>
-                  <Paragraph self={"flex-start"}>
-                    WebSocket
-                  </Paragraph>
-                  {wsConnected 
-                  ? <CircleCheck size={20} />
-                  : <CircleX size={20} />
-                  }
-                </XStack>
-                <Input placeholder="URL Server" value={wsURL} />
-                <Button
-                  onPress={wsConnected ? disconnectWs : connectWs}
-                >
-                  {wsConnected 
-                  ? "Desconectar"
-                  : "Conectar"
-                  }
-                </Button>
-              </YStack>
-            </YStack>
-            <YStack gap={10} borderWidth={1} borderColor={"$borderColorHover"} p={10} rounded={"$4"}>
-              <Paragraph color={"$color08"}>
-                Social
-              </Paragraph>
-              <YStack p={5} gap={10}>           
-                <XStack gap={15} items={"center"}>
-                  <Paragraph>
-                    ID:
-                  </Paragraph>
-                  <Paragraph>
-                    XHFK3-2LKF4-F9S89
-                  </Paragraph>
-                  <Button
-                    icon={<ChevronDown size={25} />}
-                    chromeless
-                    ml={"auto"}
-                    color={"$color10"}
-                  >
-                    Ver QR
-                  </Button>
-                </XStack>
-                <Button>
-                  Conectar
-                </Button>
-              </YStack>
-            </YStack>
-            <Button mt={"auto"}
-              icon={<LogIn size={25} />}
-              self={"center"}
-              variant="outlined"
-              color={"$color10"}
-            >
-              Iniciar sesión
-            </Button>
-          </Sheet.Frame>
-    </Sheet>
+      {/* Second Sheet */}
+      <QRSlidingMenu
+        isVisible={QRSlidingMenuIsVisible}
+        toggleIsVisible={toggleQRSlidingMenuIsVisible}
+        roomName={roomName}
+        roomPass={roomPass}
+        setRoomQR={setRoomNameQR}
+      />
+
+      <ScanSlidingMenu
+        isVisible={scanSlidingMenuIsVisible}
+        toggleIsVisible={toggleScanSlidingMenuIsVisible}
+        setScanResult={setScanResult}
+      />
     </>
   );
 }
