@@ -1,3 +1,4 @@
+import { ResultMessage } from "@/interface/result_message";
 import {
   WSConnectionMessage,
   WsMessageIn,
@@ -8,7 +9,7 @@ import { EventEmitter } from "expo";
 
 type WebSocketEvents = {
   wsState: (connected: boolean) => void;
-  wsMessageTranscript: (message: string) => void;
+  wsMessageResult: (message: ResultMessage) => void;
   wsMessageServer: (resason: string) => void;
 };
 
@@ -33,23 +34,36 @@ export default class WebSocketService {
     }
 
     this.connection.onmessage = (e) => {
-      console.log(JSON.parse(e.data));
-      console.log("Message: ", JSON.parse(e.data));
+      // console.log(JSON.parse(e.data));
+      // console.log("Message: ", JSON.parse(e.data));
       const data = JSON.parse(e.data);
       if (data.content) {
         const wsMessage: WsMessageIn = data;
-        console.log("wsMessage: ", wsMessage.content);
-        myEmitter.emit("wsMessageTranscript", wsMessage.content);
+        const content: WsMessageOut = JSON.parse(wsMessage.content);
+        console.log("wsMessage: ", content.text);
+        myEmitter.emit("wsMessageResult", {
+          from: wsMessage.from,
+          content: content.text,
+          type: "chat_message",
+        });
       } else {
         const wsMessageServer: WsMessageServer = data;
         console.log("wsMessageServer: ", wsMessageServer);
         if (wsMessageServer.type === "success") {
-          myEmitter.emit("wsState", true);
-          if (this.connection) {
-            this.connection.onclose = (e) => {
-              // console.log("Close: ", e);
-              myEmitter.emit("wsState", false);
-            };
+          if (wsMessageServer.alias === alias) {
+            myEmitter.emit("wsState", true);
+            if (this.connection) {
+              this.connection.onclose = (e) => {
+                // console.log("Close: ", e);
+                myEmitter.emit("wsState", false);
+              };
+            }
+          } else {
+            myEmitter.emit("wsMessageResult", {
+              from: wsMessageServer.alias ?? "",
+              content: wsMessageServer.code,
+              type: "alert",
+            });
           }
           return;
         }
@@ -110,8 +124,8 @@ export default class WebSocketService {
     myEmitter.addListener("wsState", callback);
   }
 
-  onMessage(callback: (message: string) => void) {
-    myEmitter.addListener("wsMessageTranscript", callback);
+  onMessage(callback: (message: ResultMessage) => void) {
+    myEmitter.addListener("wsMessageResult", callback);
   }
 
   onMessageServer(callback: (reason: string) => void) {
@@ -122,8 +136,8 @@ export default class WebSocketService {
     myEmitter.removeListener("wsState", callback);
   }
 
-  removeMessageListener(callback: (message: string) => void) {
-    myEmitter.removeListener("wsMessageTranscript", callback);
+  removeMessageListener(callback: (message: ResultMessage) => void) {
+    myEmitter.removeListener("wsMessageResult", callback);
   }
 
   removeMessageServerListener(callback: (reason: string) => void) {

@@ -188,10 +188,29 @@ export const PrimarySlidingMenu = React.memo(
                       disabled={wsConnected}
                       onFocus={() => setSlidingMenuPosition(0)}
                     />
+                    {!wsConnected ? (
+                      <Button
+                        p={"$1"}
+                        chromeless
+                        onPress={() => toggleScanIsVisible(true)}
+                      >
+                        <Camera size={"$3"} />
+                      </Button>
+                    ) : (
+                      <Button
+                        p={"$1"}
+                        chromeless
+                        onPress={() => {
+                          handleViewQR();
+                        }}
+                      >
+                        <QrCode size={"$3"} />
+                      </Button>
+                    )}
                   </XStack>
                 </XStack>
               </YStack>
-              {!wsConnected && (
+              {/* {!wsConnected && (
                 <XStack items={"center"} justify={"space-around"} gap={5}>
                   <Button
                     p={"$1"}
@@ -210,7 +229,7 @@ export const PrimarySlidingMenu = React.memo(
                     <Camera size={"$3"} />
                   </Button>
                 </XStack>
-              )}
+              )} */}
               <XStack items={"center"} gap={5}>
                 {!wsConnected && (
                   <Button

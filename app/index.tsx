@@ -1,19 +1,23 @@
-import { MaterialIcons } from "@expo/vector-icons";
-import { Menu, UserCircle2 } from "@tamagui/lucide-icons";
+import { Menu, Mic, MicOff, SendHorizontal } from "@tamagui/lucide-icons";
 import { useEffect, useRef, useState } from "react";
-import { Button, Paragraph, ScrollView, XStack, YStack } from "tamagui";
+import { Button, Input, Paragraph, ScrollView, XStack, YStack } from "tamagui";
 
+import { ResultMessage } from "@/interface/result_message";
 import WebSocketService from "@/services/WebSocketService";
 import { PrimarySlidingMenu } from "@/UI/Index/PrimarySlidingMenu";
 import { QRSlidingMenu } from "@/UI/Index/QRSlidingMenu";
 import { ScanSlidingMenu } from "@/UI/Index/ScanSlidingMenu";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
 } from "expo-speech-recognition";
-import { ToastAndroid } from "react-native";
+import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ToastAndroid,
+} from "react-native";
 
 export default function Index() {
   const [micOn, setMicOn] = useState(false);
@@ -39,13 +43,16 @@ export default function Index() {
   // Ajustes
   const [autoScroll, setAutoScroll] = useState(true);
 
+  // Keyboard
+  const [keyboardVerticalOffset, setKeyboardVerticalOffset] = useState(0);
+
   const scrollViewRef = useRef<ScrollView>(null);
   // WebSocket
   const [roomName, setRoomName] = useState("");
   const [roomPass, setRoomPass] = useState("");
   const [alias, setAlias] = useState("");
   const [wsURL, setWsURL] = useState(
-    `https://74a8-2800-bf0-2825-55-7577-283e-fed0-8fbb.ngrok-free.app/rooms/`,
+    `https://6844-2800-bf0-2805-13c9-983-f658-45d3-82f8.ngrok-free.app/rooms/`,
   );
   const [roomNameQR, setRoomNameQR] = useState<any>();
 
@@ -53,6 +60,8 @@ export default function Index() {
   const [wsConnected, setWsConnected] = useState(false);
 
   const [scanResult, setScanResult] = useState("");
+
+  const [inputText, setInputText] = useState("");
 
   // Enrutador
   const router = useRouter();
@@ -107,6 +116,13 @@ export default function Index() {
       return;
     }
     recStart();
+  }
+
+  async function handleSendInputText() {
+    wsService.sendMessage({
+      text: inputText,
+    });
+    setInputText("");
   }
 
   function goToSettings() {
@@ -198,9 +214,16 @@ export default function Index() {
         }
       };
 
-      const handleMessage = (message: string) => {
-        setListMessageTranscript((prev) => [...prev, message]);
-        console.log(message);
+      const handleMessage = (message: ResultMessage) => {
+        if (message.type === "chat_message") {
+          setListMessageTranscript((prev) => [...prev, message.content]);
+        } else if (message.type === "alert") {
+          let alert = "";
+          if (message.content === "joined") {
+            alert = `** ${message.from} se unió a la sala **`;
+          }
+          setListMessageTranscript((prev) => [...prev, alert]);
+        }
       };
 
       const handleMessageServer = (reason: string) => {
@@ -218,20 +241,20 @@ export default function Index() {
     }
   }, [wsService]);
 
-  useEffect(() => {
-    const getData = async (key: string) => {
-      try {
-        const value = await AsyncStorage.getItem(key);
-        return value;
-      } catch (e) {
-        console.log(e);
-      }
-    };
-    (async () => {
-      const id = await getData("user-id");
-      setUserID(id ?? "XXXX-XXXX");
-    })();
-  }, []);
+  // useEffect(() => {
+  //   const getData = async (key: string) => {
+  //     try {
+  //       const value = await AsyncStorage.getItem(key);
+  //       return value;
+  //     } catch (e) {
+  //       console.log(e);
+  //     }
+  //   };
+  //   (async () => {
+  //     const id = await getData("user-id");
+  //     setUserID(id ?? "XXXX-XXXX");
+  //   })();
+  // }, []);
 
   useEffect(() => {
     console.log("ScanRes: " + scanResult);
@@ -242,89 +265,142 @@ export default function Index() {
     }
   }, [scanResult]);
 
+  useEffect(() => {
+    // console.log("Creando KeyboardListeners");
+    const showSub = Keyboard.addListener("keyboardDidShow", () => {
+      setKeyboardVerticalOffset(30);
+      // console.log("Teclado Arriba");
+    });
+    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+      setKeyboardVerticalOffset(0);
+      // console.log("Teclado Abajo");
+    });
+    return () => {
+      // console.log("Limpiando KeyboardListeners");
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    console.log(keyboardVerticalOffset);
+  }, [keyboardVerticalOffset]);
+
   return (
     <>
-      <YStack bg={"$background"} flex={1} justify="center" items="center">
-        <XStack p={10} width={"100%"} justify={"space-between"}>
-          <Button icon={<UserCircle2 size={30} />} chromeless>
-            Invitado
-          </Button>
-          <Button
-            icon={<Menu size={30} />}
-            p={5}
-            onPress={() => {
-              // setSheetOpen(true)
-              togglePrimarySlidingMenuIsVisible(true);
-            }}
-          ></Button>
-        </XStack>
-        <YStack items={"center"} gap={10}>
-          <Paragraph fontSize={20}>Greeb Transcript</Paragraph>
-        </YStack>
-        <YStack gap={20} items={"center"}>
-          <Paragraph color={"$colorHover"}>Resultados</Paragraph>
-          <Paragraph text={"center"}>
-            {transcript === "" ? "..." : transcript}
-          </Paragraph>
-        </YStack>
-        <YStack flex={1} gap={20} items={"center"} width={"100%"} p={20}>
-          <Paragraph color={"$colorHover"}>Lista de Resultados</Paragraph>
+      <YStack bg={"$background"} flex={1}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={keyboardVerticalOffset}
+          style={{ flex: 1 }}
+        >
           <YStack
-            p={10}
+            bg={"$background"}
             flex={1}
-            bg={"$borderColorHover"}
-            rounded={"$4"}
-            width={"100%"}
+            justify="flex-start"
+            items="center"
+            gap={"$2.5"}
+            py={"$5"}
           >
-            <ScrollView overflow="hidden" ref={scrollViewRef}>
+            <XStack px={"$3"} width={"100%"} justify={"space-between"}>
+              {/* <Button icon={<UserCircle2 size={30} />} chromeless>
+            Invitado
+          </Button> */}
+              <XStack items={"center"} justify={"flex-start"} gap={10} flex={1}>
+                <Paragraph fontSize={20}>Greeb Transcript</Paragraph>
+              </XStack>
+              <Button
+                icon={<Menu size={"$2.5"} />}
+                p={5}
+                onPress={() => {
+                  // setSheetOpen(true)
+                  togglePrimarySlidingMenuIsVisible(true);
+                }}
+                ml={"auto"}
+              ></Button>
+            </XStack>
+            <YStack flex={1} gap={20} items={"center"} width={"100%"} p={10}>
+              {/* <Paragraph color={"$colorHover"}>Lista de Resultados</Paragraph> */}
               <YStack
-                gap={10}
-                overflow="hidden"
-                display="flex"
-                flexDirection="row"
-                flexWrap="wrap"
+                p={10}
+                flex={1}
+                bg={"$borderColorHover"}
+                rounded={"$4"}
+                width={"100%"}
               >
-                {listMessageTranscript.map((t, index) => (
-                  <Paragraph
-                    display="block"
-                    key={index}
-                    bg={"$background"}
-                    px={6}
-                    rounded={"$2"}
+                <ScrollView overflow="hidden" ref={scrollViewRef}>
+                  <YStack
+                    gap={10}
+                    overflow="hidden"
+                    display="flex"
+                    flexDirection="row"
+                    flexWrap="wrap"
                   >
-                    {t}
-                  </Paragraph>
-                ))}
+                    {listMessageTranscript.map((t, index) =>
+                      t.includes("**") ? (
+                        <Paragraph
+                          display="block"
+                          key={index}
+                          bg={"$background"}
+                          px={6}
+                          rounded={"$2"}
+                          color={"$color10"}
+                          text={"center"}
+                          width={"100%"}
+                        >
+                          {t.replaceAll("*", "")}
+                        </Paragraph>
+                      ) : (
+                        <Paragraph
+                          display="block"
+                          key={index}
+                          bg={"$background"}
+                          px={6}
+                          rounded={"$2"}
+                        >
+                          {t}
+                        </Paragraph>
+                      ),
+                    )}
+                  </YStack>
+                </ScrollView>
               </YStack>
-            </ScrollView>
+            </YStack>
+            <XStack gap={"$2"} items={"center"} px={"$3"}>
+              <Paragraph text={"left"} flex={1}>
+                {transcript === "" ? "..." : transcript}
+              </Paragraph>
+              <Button
+                p={10}
+                borderWidth={2}
+                borderColor={recognizing ? "lime" : "transparent"}
+                icon={
+                  recognizing ? <Mic size={"$2"} /> : <MicOff size={"$2"} />
+                }
+                height={"auto"}
+                rounded={9999}
+                onPress={micOn ? closeMic : openMic}
+              />
+            </XStack>
+            <XStack
+              items={"center"}
+              justify={"flex-start"}
+              px={"$3"}
+              gap={"$2"}
+            >
+              <Input
+                value={inputText}
+                flex={1}
+                onChangeText={(text) => setInputText(text)}
+              />
+              <Button
+                p={10}
+                icon={<SendHorizontal size={"$2"} />}
+                onPress={handleSendInputText}
+              />
+            </XStack>
           </YStack>
-        </YStack>
-        <YStack items={"center"} p={30} gap={10}>
-          <Button
-            p={10}
-            borderWidth={2}
-            borderColor={recognizing ? "lime" : "transparent"}
-            icon={
-              recognizing ? (
-                <MaterialIcons name="mic" size={50} />
-              ) : (
-                <MaterialIcons name="mic-off" size={50} />
-              )
-            }
-            height={"auto"}
-            rounded={9999}
-            onPress={micOn ? closeMic : openMic}
-          ></Button>
-          <Button
-            p={10}
-            borderWidth={2}
-            icon={<MaterialIcons name="settings" size={30} />}
-            height={"auto"}
-            rounded={9999}
-            onPress={goToSettings}
-            opacity={0.8}
-          ></Button>
-        </YStack>
+        </KeyboardAvoidingView>
       </YStack>
 
       {/* Sliding Menus */}
