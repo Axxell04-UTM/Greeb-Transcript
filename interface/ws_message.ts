@@ -5,12 +5,18 @@ export interface WSConnectionMessage {
 }
 
 export interface WsMessageIn {
-  type: "message";
-  from: string;
-  content: string;
+  type: "message" | "pong";
+  from?: string;
+  content?: string;
 }
 
 export interface WsMessageOut {
+  type: "message" | "ping";
+  text?: string;
+}
+
+export interface WsContentMessageIn {
+  type: "message" | "ping";
   text: string;
 }
 

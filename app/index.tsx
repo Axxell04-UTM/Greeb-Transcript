@@ -52,7 +52,7 @@ export default function Index() {
   const [roomPass, setRoomPass] = useState("");
   const [alias, setAlias] = useState("");
   const [wsURL, setWsURL] = useState(
-    `https://6844-2800-bf0-2805-13c9-983-f658-45d3-82f8.ngrok-free.app/rooms/`,
+    `${process.env.EXPO_PUBLIC_API_URL}/rooms/`,
   );
   const [roomNameQR, setRoomNameQR] = useState<any>();
 
@@ -77,12 +77,12 @@ export default function Index() {
     if (e.isFinal) {
       setListTranscript([...listTranscript, e.results[0]?.transcript]);
       wsService.sendMessage({
+        type: "message",
         text: e.results[0]?.transcript,
       });
     }
   });
   useSpeechRecognitionEvent("error", (e) => {
-    // console.log("Error code: ", e.error, "Error message:", e.message);
     if (micOn) {
       recStart();
     }
@@ -120,14 +120,15 @@ export default function Index() {
 
   async function handleSendInputText() {
     wsService.sendMessage({
+      type: "message",
       text: inputText,
     });
     setInputText("");
   }
 
-  function goToSettings() {
-    router.push("/settings");
-  }
+  // function goToSettings() {
+  //   router.push("/settings");
+  // }
 
   function connectWs(action: "create" | "join") {
     if (!wsURL) {
@@ -281,10 +282,6 @@ export default function Index() {
       hideSub.remove();
     };
   }, []);
-
-  useEffect(() => {
-    console.log(keyboardVerticalOffset);
-  }, [keyboardVerticalOffset]);
 
   return (
     <>

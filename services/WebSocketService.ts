@@ -1,6 +1,7 @@
 import { ResultMessage } from "@/interface/result_message";
 import {
   WSConnectionMessage,
+  WsContentMessageIn,
   WsMessageIn,
   WsMessageOut,
   WsMessageServer,
@@ -39,24 +40,50 @@ export default class WebSocketService {
       const data = JSON.parse(e.data);
       if (data.content) {
         const wsMessage: WsMessageIn = data;
-        const content: WsMessageOut = JSON.parse(wsMessage.content);
-        console.log("wsMessage: ", content.text);
-        myEmitter.emit("wsMessageResult", {
-          from: wsMessage.from,
-          content: content.text,
-          type: "chat_message",
-        });
+        if (wsMessage.content && wsMessage.from) {
+          const content: WsContentMessageIn = JSON.parse(wsMessage.content);
+          console.log("wsMessage: ", content.text);
+          myEmitter.emit("wsMessageResult", {
+            from: wsMessage.from,
+            content: content.text,
+            type: "chat_message",
+          });
+        }
+      } else if (data.type === "pong") {
+        if (
+          this.connection &&
+          this.connection?.readyState === this.connection?.OPEN
+        ) {
+          setTimeout(() => {
+            if (
+              !this.connection ||
+              this.connection?.readyState !== this.connection?.OPEN
+            ) {
+              return;
+            }
+            this.sendMessage({ type: "ping" });
+            console.log(`${alias} - Pong`);
+          }, 20000);
+        }
       } else {
         const wsMessageServer: WsMessageServer = data;
         console.log("wsMessageServer: ", wsMessageServer);
         if (wsMessageServer.type === "success") {
+          console.log(
+            `${wsMessageServer.alias} === ${alias} = ${wsMessageServer.alias === alias}`,
+          );
+          console.log(this.connection);
           if (wsMessageServer.alias === alias) {
             myEmitter.emit("wsState", true);
+            setTimeout(() => {
+              this.sendMessage({ type: "ping" });
+            }, 1000);
             if (this.connection) {
-              this.connection.onclose = (e) => {
-                // console.log("Close: ", e);
-                myEmitter.emit("wsState", false);
-              };
+              // this.connection.onclose = (e) => {
+              //   console.log("Desconectando: ", e);
+              //   myEmitter.emit("wsState", false);
+              // };
+              this.initOnClose();
             }
           } else {
             myEmitter.emit("wsMessageResult", {
@@ -94,18 +121,28 @@ export default class WebSocketService {
   }
 
   disconnect() {
-    if (
-      !this.connection ||
-      this.connection.readyState !== this.connection.OPEN
-    ) {
+    if (!this.connection) {
       return;
     }
+    console.log("Estado de conexión: " + this.connection.readyState);
     this.connection.close(1000, "Desconexión voluntaria");
-    this.connection.onclose = null;
-    this.connection = null;
+    console.log("Estado de conexión: " + this.connection.readyState);
+    setTimeout(() => {
+      console.log("Estado de conexión: " + this.connection?.readyState);
+    }, 5000);
+
     myEmitter.emit("wsState", false);
 
     console.log("Desconexión voluntaria");
+  }
+
+  initOnClose() {
+    if (!this.connection) return;
+    console.log("OnClose inicializado");
+    this.connection.onclose = (e) => {
+      console.log("Desconectando: ", e);
+      myEmitter.emit("wsState", false);
+    };
   }
 
   async sendMessage(message: WsMessageOut | WSConnectionMessage) {
@@ -115,6 +152,11 @@ export default class WebSocketService {
     ) {
       // ToastAndroid.show("No hay conexión WS establecida", ToastAndroid.SHORT);
       console.log("No hay conexión WS establecida");
+      console.log(
+        `Conexión: ${this.connection} | Estado de conexión: ${this.connection?.readyState}`,
+      );
+
+      this.disconnect();
       return;
     }
     this.connection.send(JSON.stringify(message));
@@ -148,6 +190,12 @@ export default class WebSocketService {
     if (!WebSocketService.instance) {
       WebSocketService.instance = new WebSocketService();
     }
+    // if (WebSocketService.instance.connection?.readyState === 1) {
+    //   WebSocketService.instance.connection.close(
+    //     1000,
+    //     "Desconexión voluntaria",
+    //   );
+    // }
     return WebSocketService.instance;
   }
 }
