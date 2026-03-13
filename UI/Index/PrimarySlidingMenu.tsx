@@ -1,4 +1,5 @@
 import { SlidingBottomMenu } from "@/components/SlidingBottomMenu";
+import WebSocketService from "@/services/WebSocketService";
 import {
   Camera,
   CircleCheck,
@@ -22,6 +23,7 @@ interface PrimarySlidingMenuProps {
   autoScroll: boolean;
   toggleAutoScroll: (value?: boolean) => void;
   wsConnected: boolean;
+  wsService: WebSocketService;
   setRoomName: (text: string) => void;
   setRoomPass: (text: string) => void;
   setAlias: (text: string) => void;
@@ -45,6 +47,7 @@ export const PrimarySlidingMenu = React.memo(
     setRoomPass,
     setAlias,
     connectWs,
+    wsService,
     disconnectWs,
     toggleQRIsVisible,
     toggleScanIsVisible,
@@ -69,11 +72,13 @@ export const PrimarySlidingMenu = React.memo(
     }
 
     function handleConnectWs(action: "create" | "join") {
+      console.log("Loading Connection: " + wsService.loadingConnection);
       if (wsConnected) {
         disconnectWs();
-      } else {
+      } else if (!wsService.loadingConnection) {
         connectWs(action);
       }
+      console.log("Loading Connection: " + wsService.loadingConnection);
       Keyboard.dismiss();
     }
 

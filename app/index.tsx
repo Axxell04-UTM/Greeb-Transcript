@@ -2,6 +2,7 @@ import { Menu, Mic, MicOff, SendHorizontal } from "@tamagui/lucide-icons";
 import { useEffect, useRef, useState } from "react";
 import { Button, Input, Paragraph, ScrollView, XStack, YStack } from "tamagui";
 
+import { backManager } from "@/components/back_manager/backManager";
 import { ResultMessage } from "@/interface/result_message";
 import WebSocketService from "@/services/WebSocketService";
 import { PrimarySlidingMenu } from "@/UI/Index/PrimarySlidingMenu";
@@ -283,6 +284,12 @@ export default function Index() {
     };
   }, []);
 
+  useEffect(() => {
+    const onBackPress = () => false;
+    backManager.add(onBackPress);
+    return () => backManager.remove(onBackPress);
+  }, [router]);
+
   return (
     <>
       <YStack bg={"$background"} flex={1}>
@@ -409,6 +416,7 @@ export default function Index() {
         alias={alias}
         autoScroll={autoScroll}
         connectWs={connectWs}
+        wsService={wsService}
         disconnectWs={disconnectWs}
         setRoomName={setRoomName}
         setRoomPass={setRoomPass}

@@ -1,7 +1,8 @@
+import { backManager } from "@/components/back_manager/backManager";
 import { config } from "@/tamagui.config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Crypto from "expo-crypto";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -11,6 +12,7 @@ import { TamaguiProvider, Theme } from "tamagui";
 // const tamaguiConfig = createTamagui(config);
 
 export default function RootLayout() {
+  const router = useRouter();
   const storeData = async (key: string, value: string) => {
     try {
       await AsyncStorage.setItem(key, value);
@@ -37,6 +39,11 @@ export default function RootLayout() {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    backManager.setNavigationChecker(() => router.canGoBack());
+    console.log(router.canGoBack());
+  }, [router]);
 
   return (
     <TamaguiProvider config={config}>

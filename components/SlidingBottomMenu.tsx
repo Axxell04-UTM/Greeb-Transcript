@@ -8,6 +8,7 @@ import {
   Sheet,
   XStack,
 } from "tamagui";
+import { backManager } from "./back_manager/backManager";
 
 interface SlidingBottomMenuProps {
   isVisible: boolean;
@@ -46,6 +47,19 @@ export const SlidingBottomMenu = React.memo(
         if (isVisible) setPosition(initPosition);
       }
     }, [isVisible, initPosition, setPosition]);
+
+    useEffect(() => {
+      if (!isVisible) return;
+
+      const onBackPress = () => {
+        toggleIsVisible(false);
+        return true;
+      };
+
+      backManager.add(onBackPress);
+
+      return () => backManager.remove(onBackPress);
+    }, [isVisible, toggleIsVisible]);
 
     if (!isVisible) return null;
 

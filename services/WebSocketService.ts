@@ -19,6 +19,7 @@ const myEmitter = new EventEmitter<WebSocketEvents>();
 export default class WebSocketService {
   private static instance: WebSocketService;
   connection: WebSocket | null = null;
+  loadingConnection = false;
   constructor() {}
 
   connect(
@@ -27,12 +28,20 @@ export default class WebSocketService {
     password: string,
     alias: string,
   ) {
+    this.loadingConnection = true;
+    setTimeout(() => {
+      this.loadingConnection = false;
+    }, 5000);
     if (!this.connection) {
       this.connection = new WebSocket(url);
     } else {
       this.connection.close(1012, "Reconectando");
       this.connection = new WebSocket(url);
     }
+
+    // if (this.connection.readyState < 2) {
+    //   return;
+    // }
 
     this.connection.onmessage = (e) => {
       // console.log(JSON.parse(e.data));
@@ -62,18 +71,19 @@ export default class WebSocketService {
               return;
             }
             this.sendMessage({ type: "ping" });
-            console.log(`${alias} - Pong`);
+            // console.log(`${alias} - Pong`);
           }, 20000);
         }
       } else {
         const wsMessageServer: WsMessageServer = data;
         console.log("wsMessageServer: ", wsMessageServer);
         if (wsMessageServer.type === "success") {
-          console.log(
-            `${wsMessageServer.alias} === ${alias} = ${wsMessageServer.alias === alias}`,
-          );
-          console.log(this.connection);
+          // console.log(
+          //   `${wsMessageServer.alias} === ${alias} = ${wsMessageServer.alias === alias}`,
+          // );
+          // console.log(this.connection);
           if (wsMessageServer.alias === alias) {
+            this.loadingConnection = false;
             myEmitter.emit("wsState", true);
             setTimeout(() => {
               this.sendMessage({ type: "ping" });
@@ -105,6 +115,7 @@ export default class WebSocketService {
         } else if (wsMessageServer.code === "auth_required") {
           reason = "Se requiere autenticación";
         }
+        this.loadingConnection = false;
         myEmitter.emit("wsMessageServer", reason);
       }
     };
@@ -124,16 +135,13 @@ export default class WebSocketService {
     if (!this.connection) {
       return;
     }
-    console.log("Estado de conexión: " + this.connection.readyState);
+    this.loadingConnection = true;
     this.connection.close(1000, "Desconexión voluntaria");
-    console.log("Estado de conexión: " + this.connection.readyState);
-    setTimeout(() => {
-      console.log("Estado de conexión: " + this.connection?.readyState);
-    }, 5000);
 
     myEmitter.emit("wsState", false);
 
     console.log("Desconexión voluntaria");
+    this.loadingConnection = false;
   }
 
   initOnClose() {
