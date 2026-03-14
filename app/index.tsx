@@ -284,6 +284,7 @@ export default function Index() {
     };
   }, []);
 
+  // Handle Back Press
   useEffect(() => {
     const onBackPress = () => false;
     backManager.add(onBackPress);

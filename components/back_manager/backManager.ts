@@ -16,7 +16,6 @@ class BackManager {
   }
 
   private onBackPress = () => {
-    console.log("Back");
     for (let i = this.handlers.length - 1; i >= 0; i--) {
       const handled = this.handlers[i]();
       if (handled) return true;

@@ -10,7 +10,7 @@ import {
   User,
 } from "@tamagui/lucide-icons";
 import * as Clipboard from "expo-clipboard";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Keyboard, ToastAndroid } from "react-native";
 import { Button, Input, Paragraph, Switch, XStack, YStack } from "tamagui";
 
@@ -55,6 +55,9 @@ export const PrimarySlidingMenu = React.memo(
     const [slidingMenuPosition, setSlidingMenuPosition] = useState(0);
 
     const [userIDQRIsVisible, setUserIDQRIsVisible] = useState(false);
+
+    const input2 = useRef<Input>(null);
+    const input3 = useRef<Input>(null);
 
     // Toggle Functions
     function toggleUserIDQRIsVisible(visible?: boolean) {
@@ -166,11 +169,15 @@ export const PrimarySlidingMenu = React.memo(
                       onChangeText={(text) => handleRoomName(text)}
                       disabled={wsConnected}
                       onFocus={() => setSlidingMenuPosition(0)}
+                      returnKeyType="next"
+                      onSubmitEditing={() => input2.current?.focus()}
+                      submitBehavior="submit"
                     />
                   </XStack>
                   <XStack gap={"$2"} items={"center"}>
                     <Key color={"$color06"} />
                     <Input
+                      ref={input2}
                       flex={1}
                       placeholder="Contraseña de la sala"
                       textContentType="password"
@@ -179,6 +186,9 @@ export const PrimarySlidingMenu = React.memo(
                       onChangeText={(text) => setRoomPass(text)}
                       disabled={wsConnected}
                       onFocus={() => setSlidingMenuPosition(0)}
+                      returnKeyType="next"
+                      onSubmitEditing={() => input3.current?.focus()}
+                      submitBehavior="submit"
                     />
                   </XStack>
                 </YStack>
@@ -186,6 +196,7 @@ export const PrimarySlidingMenu = React.memo(
                   <XStack gap={"$2"} items={"center"} flex={1}>
                     <User color={"$color06"} />
                     <Input
+                      ref={input3}
                       flex={1}
                       placeholder="Alias"
                       value={alias}

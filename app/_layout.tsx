@@ -47,7 +47,7 @@ export default function RootLayout() {
 
   return (
     <TamaguiProvider config={config}>
-      <Theme name="dark_green">
+      <Theme name="dark_black">
         <SafeAreaView style={{ flex: 1 }}>
           <Stack>
             <Stack.Screen
