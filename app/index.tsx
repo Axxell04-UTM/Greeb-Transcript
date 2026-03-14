@@ -1,6 +1,13 @@
 import { Menu, Mic, MicOff, SendHorizontal } from "@tamagui/lucide-icons";
 import { useEffect, useRef, useState } from "react";
-import { Button, Input, Paragraph, ScrollView, XStack, YStack } from "tamagui";
+import {
+  Button,
+  Paragraph,
+  ScrollView,
+  TextArea,
+  XStack,
+  YStack,
+} from "tamagui";
 
 import { backManager } from "@/components/back_manager/backManager";
 import { ResultMessage } from "@/interface/result_message";
@@ -393,10 +400,12 @@ export default function Index() {
               px={"$3"}
               gap={"$2"}
             >
-              <Input
+              <TextArea
                 value={inputText}
                 flex={1}
                 onChangeText={(text) => setInputText(text)}
+                maxH={"$6"}
+                p={"$2"}
               />
               <Button
                 p={10}
