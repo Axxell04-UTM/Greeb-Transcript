@@ -135,7 +135,7 @@ export const PrimarySlidingMenu = React.memo(
         toggleIsVisible={toggleIsVisible}
         setPosition={setSlidingMenuPosition}
         title="Opciones"
-        snapPoints={[95, 80, 50]}
+        snapPoints={[95, 80]}
         initPosition={1}
       >
         <YStack gap={30} overflow="scroll">

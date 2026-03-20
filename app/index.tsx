@@ -4,12 +4,14 @@ import {
   Button,
   Paragraph,
   ScrollView,
+  Separator,
   TextArea,
   XStack,
   YStack,
 } from "tamagui";
 
 import { backManager } from "@/components/back_manager/backManager";
+import { MessageCard } from "@/components/MessageCard";
 import { ResultMessage } from "@/interface/result_message";
 import WebSocketService from "@/services/WebSocketService";
 import { PrimarySlidingMenu } from "@/UI/Index/PrimarySlidingMenu";
@@ -32,9 +34,9 @@ export default function Index() {
   const [recognizing, setRecognizing] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [listTranscript, setListTranscript] = useState<string[]>([]);
-  const [listMessageTranscript, setListMessageTranscript] = useState<string[]>(
-    [],
-  );
+  const [listMessageTranscript, setListMessageTranscript] = useState<
+    ResultMessage[]
+  >([]);
 
   // User
   const [userID, setUserID] = useState("");
@@ -205,11 +207,12 @@ export default function Index() {
     });
   }, [roomName]);
 
+  // AutoScroll
   useEffect(() => {
-    if (scrollViewRef) {
+    if (scrollViewRef && autoScroll) {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }
-  }, [listTranscript]);
+  }, [listMessageTranscript, autoScroll]);
 
   useEffect(() => {
     if (wsService) {
@@ -218,21 +221,15 @@ export default function Index() {
         setWsConnected(connected);
         if (connected) {
           ToastAndroid.show("Conexión establecida", ToastAndroid.SHORT);
+          toggleScanSlidingMenuIsVisible(false);
+          togglePrimarySlidingMenuIsVisible(false);
         } else {
           ToastAndroid.show("Conexión terminada", ToastAndroid.SHORT);
         }
       };
 
       const handleMessage = (message: ResultMessage) => {
-        if (message.type === "chat_message") {
-          setListMessageTranscript((prev) => [...prev, message.content]);
-        } else if (message.type === "alert") {
-          let alert = "";
-          if (message.content === "joined") {
-            alert = `** ${message.from} se unió a la sala **`;
-          }
-          setListMessageTranscript((prev) => [...prev, alert]);
-        }
+        setListMessageTranscript((prev) => [...prev, message]);
       };
 
       const handleMessageServer = (reason: string) => {
@@ -266,7 +263,7 @@ export default function Index() {
   // }, []);
 
   useEffect(() => {
-    console.log("ScanRes: " + scanResult);
+    // console.log("ScanRes: " + scanResult);
     if (scanResult) {
       const results = scanResult.split(";");
       setRoomName(results[0]);
@@ -332,7 +329,6 @@ export default function Index() {
               ></Button>
             </XStack>
             <YStack flex={1} gap={20} items={"center"} width={"100%"} p={10}>
-              {/* <Paragraph color={"$colorHover"}>Lista de Resultados</Paragraph> */}
               <YStack
                 p={10}
                 flex={1}
@@ -340,40 +336,37 @@ export default function Index() {
                 rounded={"$4"}
                 width={"100%"}
               >
+                <XStack justify={"flex-start"} mb={"$2"}>
+                  <Paragraph color={"$colorHover"}>
+                    Sala - {roomName && wsConnected ? roomName : "Local"}
+                  </Paragraph>
+                  <Separator self={"stretch"} vertical mx={"$3"} />
+                  <Paragraph color={"$colorHover"}>
+                    Alias - {alias && wsConnected ? alias : "Ninguno"}
+                  </Paragraph>
+                </XStack>
                 <ScrollView overflow="hidden" ref={scrollViewRef}>
                   <YStack
-                    gap={10}
+                    gap={"$1.5"}
                     overflow="hidden"
                     display="flex"
                     flexDirection="row"
                     flexWrap="wrap"
                   >
-                    {listMessageTranscript.map((t, index) =>
-                      t.includes("**") ? (
-                        <Paragraph
-                          display="block"
-                          key={index}
-                          bg={"$background"}
-                          px={6}
-                          rounded={"$2"}
-                          color={"$color10"}
-                          text={"center"}
-                          width={"100%"}
-                        >
-                          {t.replaceAll("*", "")}
-                        </Paragraph>
-                      ) : (
-                        <Paragraph
-                          display="block"
-                          key={index}
-                          bg={"$background"}
-                          px={6}
-                          rounded={"$2"}
-                        >
-                          {t}
-                        </Paragraph>
-                      ),
-                    )}
+                    {listMessageTranscript.map((m, index) => (
+                      <MessageCard
+                        message={m}
+                        prevMessage={
+                          index > 0
+                            ? listMessageTranscript[index - 1]
+                            : undefined
+                        }
+                        roomName={roomName}
+                        alias={alias}
+                        key={index}
+                        index={index}
+                      />
+                    ))}
                   </YStack>
                 </ScrollView>
               </YStack>

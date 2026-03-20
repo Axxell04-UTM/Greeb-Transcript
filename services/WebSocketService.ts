@@ -11,7 +11,7 @@ import { EventEmitter } from "expo";
 type WebSocketEvents = {
   wsState: (connected: boolean) => void;
   wsMessageResult: (message: ResultMessage) => void;
-  wsMessageServer: (resason: string) => void;
+  wsMessageServer: (reason: string) => void;
 };
 
 const myEmitter = new EventEmitter<WebSocketEvents>();
@@ -20,6 +20,7 @@ export default class WebSocketService {
   private static instance: WebSocketService;
   connection: WebSocket | null = null;
   loadingConnection = false;
+  myAlias: string | null = null;
   constructor() {}
 
   connect(
@@ -48,6 +49,7 @@ export default class WebSocketService {
       // console.log("Message: ", JSON.parse(e.data));
       const data = JSON.parse(e.data);
       if (data.content) {
+        // Es mensaje texto del chat
         const wsMessage: WsMessageIn = data;
         if (wsMessage.content && wsMessage.from) {
           const content: WsContentMessageIn = JSON.parse(wsMessage.content);
@@ -59,6 +61,7 @@ export default class WebSocketService {
           });
         }
       } else if (data.type === "pong") {
+        // Mantiene la conexión viva
         if (
           this.connection &&
           this.connection?.readyState === this.connection?.OPEN
@@ -75,32 +78,32 @@ export default class WebSocketService {
           }, 20000);
         }
       } else {
+        // Mensajes enviados por el servidor, conexiónes y desconexiónes
         const wsMessageServer: WsMessageServer = data;
         console.log("wsMessageServer: ", wsMessageServer);
         if (wsMessageServer.type === "success") {
-          // console.log(
-          //   `${wsMessageServer.alias} === ${alias} = ${wsMessageServer.alias === alias}`,
-          // );
-          // console.log(this.connection);
           if (wsMessageServer.alias === alias) {
             this.loadingConnection = false;
-            myEmitter.emit("wsState", true);
-            setTimeout(() => {
-              this.sendMessage({ type: "ping" });
-            }, 1000);
-            if (this.connection) {
-              // this.connection.onclose = (e) => {
-              //   console.log("Desconectando: ", e);
-              //   myEmitter.emit("wsState", false);
-              // };
-              this.initOnClose();
+            if (
+              wsMessageServer.code === "created" ||
+              wsMessageServer.code === "joined"
+            ) {
+              this.myAlias = alias;
+              myEmitter.emit("wsState", true);
+              setTimeout(() => {
+                this.sendMessage({ type: "ping" });
+              }, 1000);
+
+              if (this.connection) {
+                this.initOnClose();
+              }
+              myEmitter.emit("wsMessageResult", {
+                from: wsMessageServer.alias ?? "",
+                content: wsMessageServer.code,
+                type: "alert",
+              });
+            } else if (wsMessageServer.code === "left") {
             }
-          } else {
-            myEmitter.emit("wsMessageResult", {
-              from: wsMessageServer.alias ?? "",
-              content: wsMessageServer.code,
-              type: "alert",
-            });
           }
           return;
         }
@@ -138,7 +141,7 @@ export default class WebSocketService {
     this.loadingConnection = true;
     this.connection.close(1000, "Desconexión voluntaria");
 
-    myEmitter.emit("wsState", false);
+    // myEmitter.emit("wsState", false);
 
     console.log("Desconexión voluntaria");
     this.loadingConnection = false;
@@ -150,6 +153,12 @@ export default class WebSocketService {
     this.connection.onclose = (e) => {
       console.log("Desconectando: ", e);
       myEmitter.emit("wsState", false);
+      myEmitter.emit("wsMessageResult", {
+        from: this.myAlias ?? "",
+        content: "left",
+        type: "alert",
+      });
+      this.myAlias = null;
     };
   }
 
@@ -159,12 +168,19 @@ export default class WebSocketService {
       this.connection.readyState !== this.connection.OPEN
     ) {
       // ToastAndroid.show("No hay conexión WS establecida", ToastAndroid.SHORT);
-      console.log("No hay conexión WS establecida");
-      console.log(
-        `Conexión: ${this.connection} | Estado de conexión: ${this.connection?.readyState}`,
-      );
+      // console.log("No hay conexión WS establecida");
+      // console.log(
+      //   `Conexión: ${this.connection} | Estado de conexión: ${this.connection?.readyState}`,
+      // );
 
-      this.disconnect();
+      // this.disconnect();
+      const content = (message as WsMessageOut).text as string;
+      myEmitter.emit("wsMessageResult", {
+        from: "Yo",
+        content: content,
+        type: "chat_message",
+      });
+
       return;
     }
     this.connection.send(JSON.stringify(message));

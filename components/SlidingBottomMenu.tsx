@@ -5,6 +5,7 @@ import {
   Button,
   Paragraph,
   PositionChangeHandler,
+  ScrollView,
   Sheet,
   XStack,
 } from "tamagui";
@@ -82,12 +83,12 @@ export const SlidingBottomMenu = React.memo(
         <Sheet.Handle />
         <Sheet.Frame
           bg={"$background"}
-          p={30}
+          p={"$5"}
           rounded={"$8"}
-          gap={30}
+          gap={"$2"}
           onPress={() => Keyboard.dismiss()}
         >
-          <XStack items={"center"} gap={10}>
+          <XStack items={"center"} gap={"$3"}>
             <Button
               rounded={"$12"}
               p={"$1.5"}
@@ -98,7 +99,7 @@ export const SlidingBottomMenu = React.memo(
             </Button>
             {title && <Paragraph fontSize={18}>{title}</Paragraph>}
           </XStack>
-          {children}
+          <ScrollView>{children}</ScrollView>
         </Sheet.Frame>
       </Sheet>
     );
