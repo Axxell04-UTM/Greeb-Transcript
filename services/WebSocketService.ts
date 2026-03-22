@@ -82,13 +82,13 @@ export default class WebSocketService {
         const wsMessageServer: WsMessageServer = data;
         console.log("wsMessageServer: ", wsMessageServer);
         if (wsMessageServer.type === "success") {
-          if (wsMessageServer.alias === alias) {
+          if (
+            wsMessageServer.code === "created" ||
+            wsMessageServer.code === "joined"
+          ) {
             this.loadingConnection = false;
-            if (
-              wsMessageServer.code === "created" ||
-              wsMessageServer.code === "joined"
-            ) {
-              this.myAlias = alias;
+            this.myAlias = alias;
+            if (wsMessageServer.alias === alias) {
               myEmitter.emit("wsState", true);
               setTimeout(() => {
                 this.sendMessage({ type: "ping" });
@@ -97,12 +97,19 @@ export default class WebSocketService {
               if (this.connection) {
                 this.initOnClose();
               }
+            }
+            myEmitter.emit("wsMessageResult", {
+              from: wsMessageServer.alias ?? "",
+              content: wsMessageServer.code,
+              type: "alert",
+            });
+          } else if (wsMessageServer.code === "left") {
+            if (wsMessageServer.alias !== alias) {
               myEmitter.emit("wsMessageResult", {
                 from: wsMessageServer.alias ?? "",
                 content: wsMessageServer.code,
                 type: "alert",
               });
-            } else if (wsMessageServer.code === "left") {
             }
           }
           return;

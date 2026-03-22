@@ -8,6 +8,7 @@ import {
   ScrollView,
   Sheet,
   XStack,
+  YStack,
 } from "tamagui";
 import { backManager } from "./back_manager/backManager";
 
@@ -88,18 +89,22 @@ export const SlidingBottomMenu = React.memo(
           gap={"$2"}
           onPress={() => Keyboard.dismiss()}
         >
-          <XStack items={"center"} gap={"$3"}>
-            <Button
-              rounded={"$12"}
-              p={"$1.5"}
-              chromeless
-              onPress={() => handleCloseMenu()}
-            >
-              <ChevronDown size={"$3"} />
-            </Button>
-            {title && <Paragraph fontSize={18}>{title}</Paragraph>}
-          </XStack>
-          <ScrollView>{children}</ScrollView>
+          <YStack flex={1}>
+            <XStack items={"center"} gap={"$3"}>
+              <Button
+                rounded={"$12"}
+                p={"$1.5"}
+                chromeless
+                onPress={() => handleCloseMenu()}
+              >
+                <ChevronDown size={"$3"} />
+              </Button>
+              {title && <Paragraph fontSize={18}>{title}</Paragraph>}
+            </XStack>
+            <YStack flex={1}>
+              <ScrollView flex={1}>{children}</ScrollView>
+            </YStack>
+          </YStack>
         </Sheet.Frame>
       </Sheet>
     );

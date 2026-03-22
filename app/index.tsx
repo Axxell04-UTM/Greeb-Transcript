@@ -11,8 +11,13 @@ import {
 } from "tamagui";
 
 import { backManager } from "@/components/back_manager/backManager";
-import { MessageCard } from "@/components/MessageCard";
-import { ResultMessage } from "@/interface/result_message";
+import { ChatLogCard } from "@/components/ChatLogCard";
+import {
+  AlertMessage,
+  ChatLogs,
+  PackageResultsMessages,
+  ResultMessage,
+} from "@/interface/result_message";
 import WebSocketService from "@/services/WebSocketService";
 import { PrimarySlidingMenu } from "@/UI/Index/PrimarySlidingMenu";
 import { QRSlidingMenu } from "@/UI/Index/QRSlidingMenu";
@@ -131,7 +136,7 @@ export default function Index() {
   async function handleSendInputText() {
     wsService.sendMessage({
       type: "message",
-      text: inputText,
+      text: inputText.trim(),
     });
     setInputText("");
   }
@@ -288,6 +293,87 @@ export default function Index() {
     };
   }, []);
 
+  // ChatLogs Manipulation
+
+  // const [listPackageMessages, setListPackageMessages] = useState<
+  //   PackageResultsMessages[]
+  // >([]);
+  const [chatLogs, setChatLogs] = useState<ChatLogs>([]);
+
+  const aliasRef = useRef(alias);
+  const roomNameRef = useRef(roomName);
+
+  useEffect(() => {
+    aliasRef.current = alias;
+    roomNameRef.current = roomName;
+  }, [alias, roomName]);
+
+  useEffect(() => {
+    let newLogs: ChatLogs = [];
+    let pm: PackageResultsMessages | undefined;
+    listMessageTranscript
+      .filter((msg) => msg.from !== undefined)
+      .forEach((msg, index) => {
+        if (msg.type === "chat_message") {
+          if (!pm) {
+            pm = { owner: msg.from, messages: [msg], type: "package" };
+          } else {
+            if (pm.owner === msg.from) {
+              pm.messages = [...pm.messages, msg]; // Lograr conservar el pm para las iteraciones siguientes??
+            } else {
+              // Cambio entre Packages
+              // newLogs.push(pm);
+              pm = { owner: msg.from, messages: [msg], type: "package" };
+            }
+          }
+          if (index + 1 < listMessageTranscript.length) {
+            if (pm.owner !== listMessageTranscript[index + 1].from) {
+              if (typeof pm !== "undefined") {
+                newLogs.push(pm);
+                // setChatLogs((prev) => prev.concat(pm as PackageResultsMessages));
+              }
+            }
+          } else if (index + 1 === listMessageTranscript.length) {
+            if (typeof pm !== "undefined") {
+              // setListPackageMessages((prev) => [
+              //   ...prev,
+              //   pm as PackageResultsMessages,
+              // ]);
+              // setChatLogs((prev) => [...prev, pm as PackageResultsMessages]);
+              newLogs.push(pm);
+              // setChatLogs((prev) => prev.concat(pm as PackageResultsMessages));
+            }
+          }
+        } else {
+          let content = "";
+          if (msg.content === "joined") {
+            if (aliasRef.current === msg.from) {
+              content = `Te uniste a la sala ${roomNameRef.current}`;
+            } else {
+              content = `${msg.from} se unió a la sala ${roomNameRef.current}`;
+            }
+          } else if (msg.content === "created") {
+            content = `Creaste la sala ${roomNameRef.current}`;
+          } else if (msg.content === "left") {
+            if (aliasRef.current === msg.from) {
+              content = `Abandonaste la sala ${roomNameRef.current}`;
+            } else {
+              content = `${msg.from} abandonó la sala ${roomNameRef.current}`;
+            }
+          }
+          let alert: AlertMessage = { type: "alert", content: content };
+          // setChatLogs((prev) => [...prev, alert]);
+          newLogs.push(alert);
+          // setChatLogs((prev) => prev.concat(alert));
+        }
+      });
+    setChatLogs(newLogs);
+  }, [listMessageTranscript]);
+
+  useEffect(() => {
+    console.log(chatLogs);
+  }, [chatLogs]);
+
   // Handle Back Press
   useEffect(() => {
     const onBackPress = () => false;
@@ -348,19 +434,14 @@ export default function Index() {
                 <ScrollView overflow="hidden" ref={scrollViewRef}>
                   <YStack
                     gap={"$1.5"}
-                    overflow="hidden"
+                    // overflow="hidden"
                     display="flex"
-                    flexDirection="row"
-                    flexWrap="wrap"
+                    // flexDirection="row"
+                    // flexWrap="wrap"
                   >
-                    {listMessageTranscript.map((m, index) => (
-                      <MessageCard
-                        message={m}
-                        prevMessage={
-                          index > 0
-                            ? listMessageTranscript[index - 1]
-                            : undefined
-                        }
+                    {chatLogs.map((chatLog, index) => (
+                      <ChatLogCard
+                        chatLog={chatLog}
                         roomName={roomName}
                         alias={alias}
                         key={index}
@@ -404,6 +485,8 @@ export default function Index() {
                 p={10}
                 icon={<SendHorizontal size={"$2"} />}
                 onPress={handleSendInputText}
+                disabled={inputText.trim() === ""}
+                disabledStyle={{ opacity: 0.6 }}
               />
             </XStack>
           </YStack>

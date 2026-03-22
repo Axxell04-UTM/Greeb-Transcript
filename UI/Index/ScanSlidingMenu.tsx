@@ -1,8 +1,8 @@
 import { SlidingBottomMenu } from "@/components/SlidingBottomMenu";
 import {
-    BarcodeScanningResult,
-    CameraView,
-    useCameraPermissions,
+  BarcodeScanningResult,
+  CameraView,
+  useCameraPermissions,
 } from "expo-camera";
 import { useFocusEffect } from "expo-router";
 import React, { useCallback, useState } from "react";
@@ -47,9 +47,21 @@ export const ScanSlidingMenu = React.memo(
       >
         <YStack flex={1} items={"center"} gap={30}>
           {cameraPermission?.granted && (
-            <YStack flex={1} px={20} pb={20} width={"100%"} gap={10}>
+            <YStack
+              flex={1}
+              px={20}
+              py={20}
+              width={"100%"}
+              gap={10}
+              rounded={"$10"}
+            >
               <CameraView
-                style={{ flex: 0.5, width: "100%", borderRadius: 15 }}
+                style={{
+                  flex: 1,
+                  width: "100%",
+                  borderRadius: 13,
+                  height: 300,
+                }}
                 barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
                 onBarcodeScanned={(res) => handleQRScanned(res)}
               ></CameraView>

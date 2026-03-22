@@ -74,6 +74,11 @@ export const PrimarySlidingMenu = React.memo(
       setRoomName(text);
     }
 
+    function handleAlias(text: string) {
+      text = text.trim();
+      setAlias(text);
+    }
+
     function handleConnectWs(action: "create" | "join") {
       console.log("Loading Connection: " + wsService.loadingConnection);
       if (wsConnected) {
@@ -200,7 +205,7 @@ export const PrimarySlidingMenu = React.memo(
                       flex={1}
                       placeholder="Alias"
                       value={alias}
-                      onChangeText={(text) => setAlias(text)}
+                      onChangeText={(text) => handleAlias(text)}
                       disabled={wsConnected}
                       onFocus={() => setSlidingMenuPosition(0)}
                     />
