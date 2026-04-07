@@ -14,7 +14,9 @@ import { backManager } from "@/components/back_manager/backManager";
 import { ChatLogCard } from "@/components/ChatLogCard";
 import {
   AlertMessage,
+  ChatLogHistory,
   ChatLogs,
+  ChatLogType,
   PackageResultsMessages,
   ResultMessage,
 } from "@/interface/result_message";
@@ -33,6 +35,9 @@ import {
   Platform,
   ToastAndroid,
 } from "react-native";
+
+import ChatLogHistoryService from "@/services/ChatLogHistoryService";
+import { ChatLogHistoryBar } from "@/UI/Index/ChatLogHistoryBar";
 
 export default function Index() {
   const [micOn, setMicOn] = useState(false);
@@ -64,15 +69,21 @@ export default function Index() {
   const scrollViewRef = useRef<ScrollView>(null);
   // WebSocket
   const [roomName, setRoomName] = useState("");
+  const roomNameRef = useRef(roomName);
   const [roomPass, setRoomPass] = useState("");
   const [alias, setAlias] = useState("");
+  const aliasRef = useRef(alias);
   const [wsURL, setWsURL] = useState(
     `${process.env.EXPO_PUBLIC_API_URL}/rooms/`,
   );
   const [roomNameQR, setRoomNameQR] = useState<any>();
 
-  const [wsService, setWsService] = useState(WebSocketService.getInstance());
   const [wsConnected, setWsConnected] = useState(false);
+
+  // Services
+  const [wsService, setWsService] = useState(WebSocketService.getInstance());
+  // const [ chatLogHistoryService, setChatLogHistoryService ] = useState(ChatLogHistoryService.getInstance());
+  const chatLogHistoryServiceRef = useRef(ChatLogHistoryService.getInstance());
 
   const [scanResult, setScanResult] = useState("");
 
@@ -80,6 +91,18 @@ export default function Index() {
 
   // Enrutador
   const router = useRouter();
+
+  // ChatLogHistory
+  const [chatLogHistoryList, setChatLogHistoryList] = useState<
+    ChatLogHistory[]
+  >([]);
+  const [chatLogHistorySelected, setChatLogHistorySelected] =
+    useState<ChatLogHistory | null>(null);
+  const lastChatLogIndexed = useRef<ChatLogType>(null);
+  const lastConnectionRoomDate = useRef<Date>(null);
+
+  const [chatLogs, setChatLogs] = useState<ChatLogs>([]);
+  const chatLogsRef = useRef(chatLogs);
 
   useSpeechRecognitionEvent("start", () => setRecognizing(true));
   useSpeechRecognitionEvent("end", () => {
@@ -214,10 +237,10 @@ export default function Index() {
 
   // AutoScroll
   useEffect(() => {
-    if (scrollViewRef && autoScroll) {
+    if (scrollViewRef && autoScroll && wsConnected) {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }
-  }, [listMessageTranscript, autoScroll]);
+  }, [listMessageTranscript, autoScroll, wsConnected]);
 
   useEffect(() => {
     if (wsService) {
@@ -228,8 +251,17 @@ export default function Index() {
           ToastAndroid.show("Conexión establecida", ToastAndroid.SHORT);
           toggleScanSlidingMenuIsVisible(false);
           togglePrimarySlidingMenuIsVisible(false);
+          chatLogHistoryServiceRef.current.createNewChatLogHistory(
+            roomNameRef.current,
+            aliasRef.current,
+            Date.now(),
+          );
         } else {
           ToastAndroid.show("Conexión terminada", ToastAndroid.SHORT);
+          setChatLogHistoryList(
+            chatLogHistoryServiceRef.current.getChatLogHistoryList(),
+          );
+          // console.log(chatLogsRef.current);
         }
       };
 
@@ -298,10 +330,6 @@ export default function Index() {
   // const [listPackageMessages, setListPackageMessages] = useState<
   //   PackageResultsMessages[]
   // >([]);
-  const [chatLogs, setChatLogs] = useState<ChatLogs>([]);
-
-  const aliasRef = useRef(alias);
-  const roomNameRef = useRef(roomName);
 
   useEffect(() => {
     aliasRef.current = alias;
@@ -316,31 +344,52 @@ export default function Index() {
       .forEach((msg, index) => {
         if (msg.type === "chat_message") {
           if (!pm) {
-            pm = { owner: msg.from, messages: [msg], type: "package" };
+            pm = {
+              owner: msg.from,
+              messages: [msg],
+              type: "package",
+              createdAt: msg.createdAt,
+            };
           } else {
             if (pm.owner === msg.from) {
-              pm.messages = [...pm.messages, msg]; // Lograr conservar el pm para las iteraciones siguientes??
+              // pm.messages = [...pm.messages, msg];
+              pm = { ...pm, messages: [...pm.messages, msg] }; // Se conecta con el paquete de mensajes existente
             } else {
-              // Cambio entre Packages
               // newLogs.push(pm);
-              pm = { owner: msg.from, messages: [msg], type: "package" };
+              pm = {
+                owner: msg.from,
+                messages: [msg],
+                type: "package",
+                createdAt: msg.createdAt,
+              }; // Cambio a otro paquete de mensajes
             }
           }
-          if (index + 1 < listMessageTranscript.length) {
-            if (pm.owner !== listMessageTranscript[index + 1].from) {
+          if (index < listMessageTranscript.length - 1) {
+            // Si el elemento actual no es el último
+            if (
+              pm.owner !== listMessageTranscript[index + 1].from &&
+              listMessageTranscript[index + 1].type === "chat_message"
+            ) {
+              // Si el dueño del paquete existente es distinto a quién envió el siguiente mensaje
               if (typeof pm !== "undefined") {
-                newLogs.push(pm);
+                // newLogs.push(pm);
+                newLogs = [...newLogs, pm];
                 // setChatLogs((prev) => prev.concat(pm as PackageResultsMessages));
               }
+            } else if (listMessageTranscript[index + 1].type === "alert") {
+              if (typeof pm !== "undefined") {
+                newLogs = [...newLogs, pm];
+              }
             }
-          } else if (index + 1 === listMessageTranscript.length) {
+          } else if (index === listMessageTranscript.length - 1) {
             if (typeof pm !== "undefined") {
               // setListPackageMessages((prev) => [
               //   ...prev,
               //   pm as PackageResultsMessages,
               // ]);
               // setChatLogs((prev) => [...prev, pm as PackageResultsMessages]);
-              newLogs.push(pm);
+              // newLogs.push(pm);
+              newLogs = [...newLogs, pm];
               // setChatLogs((prev) => prev.concat(pm as PackageResultsMessages));
             }
           }
@@ -361,17 +410,45 @@ export default function Index() {
               content = `${msg.from} abandonó la sala ${roomNameRef.current}`;
             }
           }
-          let alert: AlertMessage = { type: "alert", content: content };
+          let alert: AlertMessage = {
+            type: "alert",
+            content: content,
+            createdAt: msg.createdAt,
+          };
           // setChatLogs((prev) => [...prev, alert]);
-          newLogs.push(alert);
+          // newLogs.push(alert);
+          newLogs = [...newLogs, alert];
           // setChatLogs((prev) => prev.concat(alert));
         }
       });
+    // if (pm) {
+    //   newLogs = [...newLogs, pm];
+    // }
     setChatLogs(newLogs);
   }, [listMessageTranscript]);
 
   useEffect(() => {
+    chatLogsRef.current = chatLogs;
+    console.log("<<<<<<<<<<<<<<<<<<<");
     console.log(chatLogs);
+    console.log(">>>>>>>>>>>>>>>>>>>");
+    if (chatLogs.length) {
+      if (lastChatLogIndexed.current !== null) {
+        if (lastChatLogIndexed.current === chatLogs[chatLogs.length - 1]) {
+          return;
+        }
+      }
+      chatLogHistoryServiceRef.current.saveChatLogHistory(
+        chatLogs[chatLogs.length - 1],
+      );
+      lastChatLogIndexed.current = chatLogs[chatLogs.length - 1];
+      // console.log(`ChatLogHistory: `);
+      // const resCLH = chatLogHistoryServiceRef.current.getChatLogHistory();
+      // console.log("<<<<<<<<<<<<<<<<");
+      // console.log(resCLH);
+      // if (resCLH) resCLH.chatLogs.forEach((cl) => console.log(cl));
+      // console.log(">>>>>>>>>>>>>>>>");
+    }
   }, [chatLogs]);
 
   // Handle Back Press
@@ -380,6 +457,32 @@ export default function Index() {
     backManager.add(onBackPress);
     return () => backManager.remove(onBackPress);
   }, [router]);
+
+  // Init History
+  useEffect(() => {
+    setChatLogHistoryList(
+      chatLogHistoryServiceRef.current.getChatLogHistoryList(),
+    );
+  }, []);
+
+  useEffect(() => {
+    if (chatLogHistorySelected) {
+      const res = chatLogHistoryServiceRef.current.getChatLogHistory(
+        chatLogHistorySelected.createdAt,
+      );
+      if (res) {
+        console.log(res);
+        console.log(
+          `${res.roomName} | ${new Date(res.createdAt).toLocaleString()}`,
+        );
+        console.log("[");
+        for (const cl of res.chatLogs) {
+          console.log(cl);
+        }
+        console.log("]");
+      }
+    }
+  }, [chatLogHistorySelected]);
 
   return (
     <>
@@ -418,7 +521,7 @@ export default function Index() {
               <YStack
                 p={10}
                 flex={1}
-                bg={"$borderColorHover"}
+                bg={"$color02"}
                 rounded={"$4"}
                 width={"100%"}
               >
@@ -438,18 +541,36 @@ export default function Index() {
                     display="flex"
                     // flexDirection="row"
                     // flexWrap="wrap"
+                    py={"$2"}
                   >
-                    {chatLogs.map((chatLog, index) => (
-                      <ChatLogCard
-                        chatLog={chatLog}
-                        roomName={roomName}
-                        alias={alias}
-                        key={index}
-                        index={index}
-                      />
-                    ))}
+                    {chatLogHistorySelected
+                      ? chatLogHistorySelected.chatLogs.map(
+                          (chatLog, index) => (
+                            <ChatLogCard
+                              chatLog={chatLog}
+                              roomName={roomName}
+                              alias={alias}
+                              key={index}
+                              index={index}
+                            />
+                          ),
+                        )
+                      : chatLogs.map((chatLog, index) => (
+                          <ChatLogCard
+                            chatLog={chatLog}
+                            roomName={roomName}
+                            alias={alias}
+                            key={index}
+                            index={index}
+                          />
+                        ))}
                   </YStack>
                 </ScrollView>
+                <ChatLogHistoryBar
+                  chatLogHistoryList={chatLogHistoryList}
+                  chatLogHistorySelected={chatLogHistorySelected}
+                  setChatLogHistorySelected={setChatLogHistorySelected}
+                />
               </YStack>
             </YStack>
             <XStack gap={"$2"} items={"center"} px={"$3"}>

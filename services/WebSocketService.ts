@@ -54,10 +54,12 @@ export default class WebSocketService {
         if (wsMessage.content && wsMessage.from) {
           const content: WsContentMessageIn = JSON.parse(wsMessage.content);
           console.log("wsMessage: ", content.text);
+          const createdAt = Date.now();
           myEmitter.emit("wsMessageResult", {
             from: wsMessage.from,
             content: content.text,
             type: "chat_message",
+            createdAt: createdAt,
           });
         }
       } else if (data.type === "pong") {
@@ -98,17 +100,21 @@ export default class WebSocketService {
                 this.initOnClose();
               }
             }
+            const createdAt = Date.now();
             myEmitter.emit("wsMessageResult", {
               from: wsMessageServer.alias ?? "",
               content: wsMessageServer.code,
               type: "alert",
+              createdAt: createdAt,
             });
           } else if (wsMessageServer.code === "left") {
             if (wsMessageServer.alias !== alias) {
+              const createdAt = Date.now();
               myEmitter.emit("wsMessageResult", {
                 from: wsMessageServer.alias ?? "",
                 content: wsMessageServer.code,
                 type: "alert",
+                createdAt: createdAt,
               });
             }
           }
@@ -160,10 +166,12 @@ export default class WebSocketService {
     this.connection.onclose = (e) => {
       console.log("Desconectando: ", e);
       myEmitter.emit("wsState", false);
+      const createdAt = Date.now();
       myEmitter.emit("wsMessageResult", {
         from: this.myAlias ?? "",
         content: "left",
         type: "alert",
+        createdAt: createdAt,
       });
       this.myAlias = null;
     };
@@ -182,10 +190,12 @@ export default class WebSocketService {
 
       // this.disconnect();
       const content = (message as WsMessageOut).text as string;
+      const createdAt = Date.now();
       myEmitter.emit("wsMessageResult", {
         from: "Yo",
         content: content,
         type: "chat_message",
+        createdAt: createdAt,
       });
 
       return;
