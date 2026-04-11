@@ -58,7 +58,7 @@
       [
         "react-native-vosk",
         {
-          "models": ["assets/model/vosk-model-small-es-0.42"],
+          "models": ["assets/models/vosk-model-small-es-0.42"],
           "iOSMicrophonePermission": "Nous avons besoin d'accéder à votre microphone"
         }
       ]

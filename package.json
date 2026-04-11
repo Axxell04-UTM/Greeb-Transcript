@@ -8,7 +8,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
@@ -33,6 +34,8 @@
     "expo-image-picker": "~16.1.4",
     "expo-linking": "~7.1.7",
     "expo-media-library": "~17.1.7",
+    "expo-network": "~7.1.5",
+    "expo-notifications": "~0.31.5",
     "expo-router": "~5.1.5",
     "expo-sharing": "~13.1.5",
     "expo-speech-recognition": "^2.1.1",
@@ -57,15 +60,15 @@
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
     "react-native-zip-archive": "^7.0.2",
-    "tamagui": "^1.132.10",
-    "expo-network": "~7.1.5",
-    "expo-notifications": "~0.31.5"
+    "tamagui": "^1.132.10"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@types/react": "~19.0.10",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~9.2.0",
+    "patch-package": "^8.0.1",
+    "postinstall-postinstall": "^2.1.0",
     "typescript": "~5.8.3"
   },
   "private": true
