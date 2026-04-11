@@ -38,6 +38,7 @@ import {
 
 import ChatLogHistoryService from "@/services/ChatLogHistoryService";
 import { ChatLogHistoryBar } from "@/UI/Index/ChatLogHistoryBar";
+import { HistorySlidingMenu } from "@/UI/Index/HistorySlidingMenu";
 
 export default function Index() {
   const [micOn, setMicOn] = useState(false);
@@ -58,6 +59,8 @@ export default function Index() {
     useState(false);
   const [QRSlidingMenuIsVisible, setQRSlidingMenuIsVisible] = useState(false);
   const [scanSlidingMenuIsVisible, setScanSlidingMenuIsVisible] =
+    useState(false);
+  const [historySlidingMenuIsVisible, setHistorySlidingMenuIsVisible] =
     useState(false);
 
   // Ajustes
@@ -223,6 +226,14 @@ export default function Index() {
       setScanSlidingMenuIsVisible(visible);
     } else {
       setScanSlidingMenuIsVisible((prev) => !prev);
+    }
+  }
+
+  function toggleHistorySlidingMenuIsVisible(visible?: boolean) {
+    if (visible !== undefined) {
+      setHistorySlidingMenuIsVisible(visible);
+    } else {
+      setHistorySlidingMenuIsVisible((prev) => !prev);
     }
   }
 
@@ -570,6 +581,9 @@ export default function Index() {
                   chatLogHistoryList={chatLogHistoryList}
                   chatLogHistorySelected={chatLogHistorySelected}
                   setChatLogHistorySelected={setChatLogHistorySelected}
+                  toggleHistorySlidingMenuIsVisible={
+                    toggleHistorySlidingMenuIsVisible
+                  }
                 />
               </YStack>
             </YStack>
@@ -647,6 +661,16 @@ export default function Index() {
         isVisible={scanSlidingMenuIsVisible}
         toggleIsVisible={toggleScanSlidingMenuIsVisible}
         setScanResult={setScanResult}
+      />
+
+      <HistorySlidingMenu
+        isVisible={historySlidingMenuIsVisible}
+        toggleIsVisible={toggleHistorySlidingMenuIsVisible}
+        chatLogHistoryList={chatLogHistoryList}
+        chatLogHistorySelected={chatLogHistorySelected}
+        setChatLogHistorySelected={setChatLogHistorySelected}
+        chatLogHistoryServiceRef={chatLogHistoryServiceRef}
+        setChatLogHistoryList={setChatLogHistoryList}
       />
     </>
   );

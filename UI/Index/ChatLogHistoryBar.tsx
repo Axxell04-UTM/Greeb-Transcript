@@ -8,6 +8,7 @@ interface ChatLogHistoryBarProps {
   setChatLogHistorySelected: React.Dispatch<
     React.SetStateAction<ChatLogHistory | null>
   >;
+  toggleHistorySlidingMenuIsVisible: (visible?: boolean) => void;
 }
 
 export const ChatLogHistoryBar = React.memo(
@@ -15,11 +16,17 @@ export const ChatLogHistoryBar = React.memo(
     chatLogHistoryList,
     chatLogHistorySelected,
     setChatLogHistorySelected,
+    toggleHistorySlidingMenuIsVisible,
   }: ChatLogHistoryBarProps) => {
     // const dateRef = useRef()
     function handleSelect(clh: ChatLogHistory | null) {
       setChatLogHistorySelected(clh);
     }
+
+    function openHistory() {
+      toggleHistorySlidingMenuIsVisible(true);
+    }
+
     return (
       <XStack gap={"$2"}>
         <Button
@@ -37,9 +44,14 @@ export const ChatLogHistoryBar = React.memo(
           <XStack gap={"$1"}>
             {chatLogHistoryList
               .sort((a, b) => b.createdAt - a.createdAt)
+              .slice(0, 4)
               .map((clh) => (
                 <Button
-                  bg={"$background02"}
+                  bg={
+                    clh.createdAt === chatLogHistorySelected?.createdAt
+                      ? "$color02"
+                      : "$color4"
+                  }
                   px={"$3"}
                   key={clh.createdAt}
                   onPress={() => handleSelect(clh)}
@@ -47,6 +59,9 @@ export const ChatLogHistoryBar = React.memo(
                   {`${clh.roomName} | ${new Date(clh.createdAt).toLocaleString()}`}
                 </Button>
               ))}
+            <Button bg={"$background0"} px={"$3"} onPress={openHistory}>
+              Ver más...
+            </Button>
           </XStack>
         </ScrollView>
       </XStack>

@@ -117,6 +117,21 @@ export default class ChatLogHistoryService {
     }
   }
 
+  deleteChatLogHistory(createdAt: number) {
+    try {
+      const file = new File(Paths.join(this.pathToSave, `${createdAt}.json`));
+      if (!file) {
+        console.error("ChatLog no encontrado");
+        return null;
+      }
+      file.delete();
+      return this.getChatLogHistoryList();
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  }
+
   readDir(path: string) {
     try {
       const dir = new Directory(path);

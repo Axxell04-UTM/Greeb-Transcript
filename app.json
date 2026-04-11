@@ -2,7 +2,7 @@
   "expo": {
     "name": "Greeb-Transcript",
     "slug": "Greeb-Transcript",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "greebtranscript",
@@ -16,6 +16,7 @@
       }
     },
     "android": {
+      "newArchEnabled": false,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -50,6 +51,15 @@
         "expo-media-library",
         {
           "isAccessMediaLocationEnabled": true
+        }
+      ],
+      "expo-sqlite",
+      "expo-asset",
+      [
+        "react-native-vosk",
+        {
+          "models": ["assets/model/vosk-model-small-es-0.42"],
+          "iOSMicrophonePermission": "Nous avons besoin d'accéder à votre microphone"
         }
       ]
     ],
