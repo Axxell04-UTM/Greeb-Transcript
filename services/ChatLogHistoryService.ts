@@ -8,7 +8,7 @@ import { Directory, File, Paths } from "expo-file-system/next";
 export default class ChatLogHistoryService {
   private static instance: ChatLogHistoryService;
   // private pathToSave = Paths.join(Paths.document, "chat_log_history");
-  private pathToSave = Paths.join(Paths.cache, "chat_log_history");
+  private pathToSave = Paths.join(Paths.document, "chat_log_history");
   private currentChatLogPath = "";
 
   constructor() {

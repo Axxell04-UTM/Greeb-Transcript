@@ -36,6 +36,7 @@ import {
   ToastAndroid,
 } from "react-native";
 
+import { TestVosk } from "@/components/TestVosk";
 import ChatLogHistoryService from "@/services/ChatLogHistoryService";
 import { ChatLogHistoryBar } from "@/UI/Index/ChatLogHistoryBar";
 import { HistorySlidingMenu } from "@/UI/Index/HistorySlidingMenu";
@@ -587,6 +588,7 @@ export default function Index() {
                 />
               </YStack>
             </YStack>
+            <TestVosk />
             <XStack gap={"$2"} items={"center"} px={"$3"}>
               <Paragraph text={"left"} flex={1}>
                 {transcript === "" ? "..." : transcript}
