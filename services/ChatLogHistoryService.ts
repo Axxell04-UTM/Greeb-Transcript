@@ -8,7 +8,7 @@ import { Directory, File, Paths } from "expo-file-system/next";
 export default class ChatLogHistoryService {
   private static instance: ChatLogHistoryService;
   // private pathToSave = Paths.join(Paths.document, "chat_log_history");
-  private pathToSave = Paths.join(Paths.document, "chat_log_history");
+  private pathToSave = Paths.join(Paths.cache, "chat_log_history");
   private currentChatLogPath = "";
 
   constructor() {
@@ -38,12 +38,19 @@ export default class ChatLogHistoryService {
       this.currentChatLogPath = clPath;
       this.readDir(this.pathToSave);
     } catch (e) {
-      console.error(e);
+      console.error("1." + e);
     }
+  }
+
+  leftChatLogHistory() {
+    this.currentChatLogPath = "";
   }
 
   saveChatLogHistory(chatLog: ChatLogType) {
     try {
+      if (!this.currentChatLogPath && chatLog.type !== "alert") {
+        this.createNewChatLogHistory("Local", "Yo", Date.now());
+      }
       const file = new File(this.currentChatLogPath);
       let chatLogs: ChatLogs = [];
       let chatLogHistory: ChatLogHistory | undefined;
@@ -74,7 +81,7 @@ export default class ChatLogHistoryService {
         // file.text();
       }
     } catch (e) {
-      console.log(e);
+      console.log("2. " + e);
     }
   }
 
@@ -92,7 +99,7 @@ export default class ChatLogHistoryService {
       }
       return chatLogHistory;
     } catch (e) {
-      console.log(e);
+      console.log("3." + e);
     }
   }
 
@@ -112,7 +119,7 @@ export default class ChatLogHistoryService {
       }
       return list;
     } catch (e) {
-      console.error(e);
+      console.error("4." + e);
       return [];
     }
   }
@@ -127,7 +134,7 @@ export default class ChatLogHistoryService {
       file.delete();
       return this.getChatLogHistoryList();
     } catch (e) {
-      console.error(e);
+      console.error("5." + e);
       return null;
     }
   }

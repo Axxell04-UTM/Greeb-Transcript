@@ -36,8 +36,8 @@ import {
   ToastAndroid,
 } from "react-native";
 
-import { TestVosk } from "@/components/TestVosk";
 import ChatLogHistoryService from "@/services/ChatLogHistoryService";
+import SpeechRecognitionService from "@/services/SpeechRecognitionService";
 import { ChatLogHistoryBar } from "@/UI/Index/ChatLogHistoryBar";
 import { HistorySlidingMenu } from "@/UI/Index/HistorySlidingMenu";
 
@@ -86,8 +86,15 @@ export default function Index() {
 
   // Services
   const [wsService, setWsService] = useState(WebSocketService.getInstance());
+  const wsServiceRef = useRef(wsService);
   // const [ chatLogHistoryService, setChatLogHistoryService ] = useState(ChatLogHistoryService.getInstance());
   const chatLogHistoryServiceRef = useRef(ChatLogHistoryService.getInstance());
+  const speechRecognitionServiceRef = useRef(
+    SpeechRecognitionService.getInstance(),
+  );
+
+  // SpeechRecognition
+  const SpeechRecognitionUsedModelRef = useRef<"expo" | "vosk">("vosk");
 
   const [scanResult, setScanResult] = useState("");
 
@@ -133,13 +140,15 @@ export default function Index() {
   // Funciones
   function openMic() {
     setMicOn(true);
-    handleStart();
+    // handleStart();
+    speechRecognitionServiceRef.current.voskRecord();
     setRecognizing(true);
   }
 
   function closeMic() {
     setMicOn(false);
-    ExpoSpeechRecognitionModule.stop();
+    // ExpoSpeechRecognitionModule.stop();
+    speechRecognitionServiceRef.current.voskRecordStop();
     setRecognizing(false);
   }
 
@@ -238,6 +247,13 @@ export default function Index() {
     }
   }
 
+  // Refresh functions
+  function refreshChatLogHistoryList() {
+    setChatLogHistoryList(
+      chatLogHistoryServiceRef.current.getChatLogHistoryList(),
+    );
+  }
+
   // Actualizando la sala para la conexión WS
   useEffect(() => {
     setWsURL((prevWsURL) => {
@@ -256,11 +272,15 @@ export default function Index() {
 
   useEffect(() => {
     if (wsService) {
+      wsServiceRef.current = wsService;
       // const ws = WebSocketService.getInstance();
       const handleState = (connected: boolean) => {
         setWsConnected(connected);
         if (connected) {
           ToastAndroid.show("Conexión establecida", ToastAndroid.SHORT);
+          setChatLogHistoryList(
+            chatLogHistoryServiceRef.current.getChatLogHistoryList(),
+          );
           toggleScanSlidingMenuIsVisible(false);
           togglePrimarySlidingMenuIsVisible(false);
           chatLogHistoryServiceRef.current.createNewChatLogHistory(
@@ -273,6 +293,7 @@ export default function Index() {
           setChatLogHistoryList(
             chatLogHistoryServiceRef.current.getChatLogHistoryList(),
           );
+          chatLogHistoryServiceRef.current.leftChatLogHistory();
           // console.log(chatLogsRef.current);
         }
       };
@@ -477,6 +498,42 @@ export default function Index() {
     );
   }, []);
 
+  // Init Speech Recognition Service
+  useEffect(() => {
+    if (speechRecognitionServiceRef) {
+      const service = speechRecognitionServiceRef.current;
+      service.init();
+
+      const handlePartialRes = (text: string) => {
+        // setTranscript(text);
+      };
+
+      const handleRes = (text: string) => {
+        if (text) {
+          setTranscript(text);
+          wsServiceRef.current.sendMessage({
+            type: "message",
+            text: text,
+          });
+        }
+      };
+
+      const handleChangeModel = (model: "expo" | "vosk") => {
+        SpeechRecognitionUsedModelRef.current = model;
+      };
+
+      service.onResult(handleRes);
+      service.onPartialResult(handlePartialRes);
+      service.onChangeModel(handleChangeModel);
+      return () => {
+        service.dispose();
+        service.removeResultListener(handleRes);
+        service.removePartialResultListener(handlePartialRes);
+        service.removeChangeModel(handleChangeModel);
+      };
+    }
+  }, [speechRecognitionServiceRef]);
+
   useEffect(() => {
     if (chatLogHistorySelected) {
       const res = chatLogHistoryServiceRef.current.getChatLogHistory(
@@ -585,10 +642,11 @@ export default function Index() {
                   toggleHistorySlidingMenuIsVisible={
                     toggleHistorySlidingMenuIsVisible
                   }
+                  refreshChatLogHistoryList={refreshChatLogHistoryList}
                 />
               </YStack>
             </YStack>
-            <TestVosk />
+            {/* <TestVosk /> */}
             <XStack gap={"$2"} items={"center"} px={"$3"}>
               <Paragraph text={"left"} flex={1}>
                 {transcript === "" ? "..." : transcript}
@@ -673,6 +731,7 @@ export default function Index() {
         setChatLogHistorySelected={setChatLogHistorySelected}
         chatLogHistoryServiceRef={chatLogHistoryServiceRef}
         setChatLogHistoryList={setChatLogHistoryList}
+        refreshChatLogHistoryList={refreshChatLogHistoryList}
       />
     </>
   );

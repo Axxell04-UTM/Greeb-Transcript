@@ -9,6 +9,7 @@ interface ChatLogHistoryBarProps {
     React.SetStateAction<ChatLogHistory | null>
   >;
   toggleHistorySlidingMenuIsVisible: (visible?: boolean) => void;
+  refreshChatLogHistoryList: () => void;
 }
 
 export const ChatLogHistoryBar = React.memo(
@@ -17,10 +18,12 @@ export const ChatLogHistoryBar = React.memo(
     chatLogHistorySelected,
     setChatLogHistorySelected,
     toggleHistorySlidingMenuIsVisible,
+    refreshChatLogHistoryList,
   }: ChatLogHistoryBarProps) => {
     // const dateRef = useRef()
     function handleSelect(clh: ChatLogHistory | null) {
       setChatLogHistorySelected(clh);
+      refreshChatLogHistoryList();
     }
 
     function openHistory() {

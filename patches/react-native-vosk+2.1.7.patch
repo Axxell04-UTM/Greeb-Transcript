@@ -237,11 +237,11 @@ index 0000000..960cd2e
 +--right-context=3
 diff --git a/node_modules/react-native-vosk/android/build/generated/assets/vosk-model-small-es-0.42/uuid b/node_modules/react-native-vosk/android/build/generated/assets/vosk-model-small-es-0.42/uuid
 new file mode 100644
-index 0000000..dea536b
+index 0000000..4061001
 --- /dev/null
 +++ b/node_modules/react-native-vosk/android/build/generated/assets/vosk-model-small-es-0.42/uuid
 @@ -0,0 +1 @@
-+9a3e09de-8e4a-48dc-b6d6-a2602fd08cba
++2d9a3abb-36a3-4c0b-a0fb-8f14f586c7ed
 \ No newline at end of file
 diff --git a/node_modules/react-native-vosk/android/build/generated/source/buildConfig/debug/com/vosk/BuildConfig.java b/node_modules/react-native-vosk/android/build/generated/source/buildConfig/debug/com/vosk/BuildConfig.java
 new file mode 100644
@@ -1110,11 +1110,11 @@ new file mode 100644
 index 0000000..e69de29
 diff --git a/node_modules/react-native-vosk/android/build/intermediates/incremental/debug/packageDebugResources/compile-file-map.properties b/node_modules/react-native-vosk/android/build/intermediates/incremental/debug/packageDebugResources/compile-file-map.properties
 new file mode 100644
-index 0000000..00c2d2b
+index 0000000..1e13d04
 --- /dev/null
 +++ b/node_modules/react-native-vosk/android/build/intermediates/incremental/debug/packageDebugResources/compile-file-map.properties
 @@ -0,0 +1 @@
-+#Sun May 03 20:47:10 ECT 2026
++#Sun May 03 16:49:18 ECT 2026
 diff --git a/node_modules/react-native-vosk/android/build/intermediates/incremental/debug/packageDebugResources/merger.xml b/node_modules/react-native-vosk/android/build/intermediates/incremental/debug/packageDebugResources/merger.xml
 new file mode 100644
 index 0000000..216cbcf
@@ -1391,11 +1391,11 @@ index 0000000..960cd2e
 +--right-context=3
 diff --git a/node_modules/react-native-vosk/android/build/intermediates/library_assets/debug/packageDebugAssets/out/vosk-model-small-es-0.42/uuid b/node_modules/react-native-vosk/android/build/intermediates/library_assets/debug/packageDebugAssets/out/vosk-model-small-es-0.42/uuid
 new file mode 100644
-index 0000000..dea536b
+index 0000000..4061001
 --- /dev/null
 +++ b/node_modules/react-native-vosk/android/build/intermediates/library_assets/debug/packageDebugAssets/out/vosk-model-small-es-0.42/uuid
 @@ -0,0 +1 @@
-+9a3e09de-8e4a-48dc-b6d6-a2602fd08cba
++2d9a3abb-36a3-4c0b-a0fb-8f14f586c7ed
 \ No newline at end of file
 diff --git a/node_modules/react-native-vosk/android/build/intermediates/local_only_symbol_list/debug/parseDebugLocalResources/R-def.txt b/node_modules/react-native-vosk/android/build/intermediates/local_only_symbol_list/debug/parseDebugLocalResources/R-def.txt
 new file mode 100644
@@ -1812,16 +1812,12 @@ index 0000000..131e265
 Binary files /dev/null and b/node_modules/react-native-vosk/android/build/kotlin/compileDebugKotlin/cacheable/caches-jvm/lookups/lookups.tab_i.len differ
 diff --git a/node_modules/react-native-vosk/android/build/kotlin/compileDebugKotlin/cacheable/last-build.bin b/node_modules/react-native-vosk/android/build/kotlin/compileDebugKotlin/cacheable/last-build.bin
 new file mode 100644
-index 0000000..5efe397
+index 0000000..2f1fcef
 Binary files /dev/null and b/node_modules/react-native-vosk/android/build/kotlin/compileDebugKotlin/cacheable/last-build.bin differ
 diff --git a/node_modules/react-native-vosk/android/build/kotlin/compileDebugKotlin/classpath-snapshot/shrunk-classpath-snapshot.bin b/node_modules/react-native-vosk/android/build/kotlin/compileDebugKotlin/classpath-snapshot/shrunk-classpath-snapshot.bin
 new file mode 100644
 index 0000000..998903a
 Binary files /dev/null and b/node_modules/react-native-vosk/android/build/kotlin/compileDebugKotlin/classpath-snapshot/shrunk-classpath-snapshot.bin differ
-diff --git a/node_modules/react-native-vosk/android/build/kotlin/compileDebugKotlin/local-state/build-history.bin b/node_modules/react-native-vosk/android/build/kotlin/compileDebugKotlin/local-state/build-history.bin
-new file mode 100644
-index 0000000..b1dfb55
-Binary files /dev/null and b/node_modules/react-native-vosk/android/build/kotlin/compileDebugKotlin/local-state/build-history.bin differ
 diff --git a/node_modules/react-native-vosk/android/build/outputs/logs/manifest-merger-debug-report.txt b/node_modules/react-native-vosk/android/build/outputs/logs/manifest-merger-debug-report.txt
 new file mode 100644
 index 0000000..d5253aa
@@ -1868,6 +1864,124 @@ diff --git a/node_modules/react-native-vosk/android/build/tmp/kotlin-classes/deb
 new file mode 100644
 index 0000000..e18444c
 Binary files /dev/null and b/node_modules/react-native-vosk/android/build/tmp/kotlin-classes/debug/com/vosk/VoskPackage.class differ
+diff --git a/node_modules/react-native-vosk/android/src/main/java/com/vosk/VoskModule.kt b/node_modules/react-native-vosk/android/src/main/java/com/vosk/VoskModule.kt
+index c2c4d64..c6e4cd9 100644
+--- a/node_modules/react-native-vosk/android/src/main/java/com/vosk/VoskModule.kt
++++ b/node_modules/react-native-vosk/android/src/main/java/com/vosk/VoskModule.kt
+@@ -7,6 +7,7 @@ import com.facebook.react.bridge.ReadableArray
+ import com.facebook.react.bridge.ReadableMap
+ import com.facebook.react.module.annotations.ReactModule
+ import com.facebook.react.modules.core.DeviceEventManagerModule
++import com.facebook.react.bridge.Arguments
+ import java.io.IOException
+ import org.json.JSONObject
+ import org.vosk.Model
+@@ -31,43 +32,59 @@ class VoskModule(reactContext: ReactApplicationContext) :
+     return NAME
+   }
+ 
+-  override fun onResult(hypothesis: String) {
+-    // Get text data from string object
+-    val text = parseHypothesis(hypothesis)
++  // override fun onResult(hypothesis: String) {
++  //   // Get text data from string object
++  //   val text = parseHypothesis(hypothesis)
+ 
+-    // Send event if data found
+-    if (!text.isNullOrEmpty()) {
+-      emitOnResult(text)
+-    }
++  //   // Send event if data found
++  //   if (!text.isNullOrEmpty()) {
++  //     emitOnResult(text)
++  //   }
++  // }
++  override fun onResult(hypothesis: String?) {
++    sendEvent("onResult", hypothesis ?: "")
+   }
+ 
+-  override fun onFinalResult(hypothesis: String) {
+-    // Get text data from string object
+-    val text = parseHypothesis(hypothesis)
++  // override fun onFinalResult(hypothesis: String) {
++  //   // Get text data from string object
++  //   val text = parseHypothesis(hypothesis)
+ 
+-    // Send event if data found
+-    if (!text.isNullOrEmpty()) {
+-      emitOnFinalResult(text)
+-    }
++  //   // Send event if data found
++  //   if (!text.isNullOrEmpty()) {
++  //     emitOnFinalResult(text)
++  //   }
++  // }
++  override fun onFinalResult(hypothesis: String?) {
++    sendEvent("onFinalResult", hypothesis ?: "")
+   }
+ 
+-  override fun onPartialResult(hypothesis: String) {
+-    // Get text data from string object
+-    val text = parseHypothesis(hypothesis, "partial")
++  // override fun onPartialResult(hypothesis: String) {
++  //   // Get text data from string object
++  //   val text = parseHypothesis(hypothesis, "partial")
+ 
+-    // Send event if data found
+-    if (!text.isNullOrEmpty()) {
+-      emitOnPartialResult(text)
+-    }
++  //   // Send event if data found
++  //   if (!text.isNullOrEmpty()) {
++  //     emitOnPartialResult(text)
++  //   }
++  // }
++  override fun onPartialResult(hypothesis: String?) {
++    sendEvent("onPartialResult", hypothesis ?: "")
+   }
+ 
+-  override fun onError(e: Exception) {
+-    emitOnError(e.toString())
++  // override fun onError(e: Exception) {
++  //   emitOnError(e.toString())
++  // }
++  override fun onError(exception: Exception?) {
++    sendEvent("onError", exception?.message ?: "Unknown error")
+   }
+ 
++  // override fun onTimeout() {
++  //   cleanRecognizer()
++  //   emitOnTimeout()
++  // }
+   override fun onTimeout() {
+     cleanRecognizer()
+-    emitOnTimeout()
++    sendEvent("onTimeout", null)
+   }
+ 
+   /**
+@@ -85,11 +102,16 @@ class VoskModule(reactContext: ReactApplicationContext) :
+   }
+ 
+   /** Sends event to react native with associated data */
+-  private fun sendEvent(eventName: String, data: String? = null) {
+-    // Send event
+-    context?.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+-            ?.emit(eventName, data)
+-  }
++  // private fun sendEvent(eventName: String, data: String? = null) {
++  //   // Send event
++  //   context?.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
++  //           ?.emit(eventName, data)
++  // }
++  private fun sendEvent(eventName: String, data: Any?) {
++  reactApplicationContext
++    .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
++    .emit(eventName, data)
++}
+ 
+   /**
+    * Translates array of string(s) to required kaldi string format
 diff --git a/node_modules/react-native-vosk/src/NativeVosk.ts b/node_modules/react-native-vosk/src/NativeVosk.ts
 index fe1dce5..5ed432f 100644
 --- a/node_modules/react-native-vosk/src/NativeVosk.ts

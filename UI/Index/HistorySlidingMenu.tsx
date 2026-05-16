@@ -25,6 +25,7 @@ interface HistorySlidingMenuProps {
   >;
   setChatLogHistoryList: React.Dispatch<React.SetStateAction<ChatLogHistory[]>>;
   chatLogHistoryServiceRef: React.RefObject<ChatLogHistoryService>;
+  refreshChatLogHistoryList: () => void;
 }
 
 export const HistorySlidingMenu = React.memo(
@@ -36,6 +37,7 @@ export const HistorySlidingMenu = React.memo(
     setChatLogHistorySelected,
     setChatLogHistoryList,
     chatLogHistoryServiceRef,
+    refreshChatLogHistoryList,
   }: HistorySlidingMenuProps) => {
     const [slidingMenuPosition, setSlidingMenuPosition] = useState(0);
     function handleSelect(clh: ChatLogHistory | null) {

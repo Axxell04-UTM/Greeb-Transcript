@@ -34,6 +34,8 @@ export default class WebSocketService {
       this.loadingConnection = false;
     }, 5000);
     if (!this.connection) {
+      url = url.replace("https", "wss");
+      console.log("URL: " + url);
       this.connection = new WebSocket(url);
     } else {
       this.connection.close(1012, "Reconectando");
