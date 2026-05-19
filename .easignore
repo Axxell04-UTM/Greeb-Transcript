@@ -1,1 +1,39 @@
+# Dependencias
 node_modules
+
+# Expo cache
+.expo
+.expo-shared
+
+# Git
+.git
+.gitignore
+
+# Logs
+*.log
+
+# OS junk
+.DS_Store
+
+# Build outputs
+dist
+build
+.tmp
+.cache
+
+# Android build basura
+android/.gradle
+android/app/build
+
+# iOS basura si existe
+ios/build
+
+# tests
+__tests__
+coverage
+
+# si tienes modelos grandes (vosk, etc) y no son necesarios para compilar
+*.zip
+*.tar
+*.tar.gz
+*.7z
