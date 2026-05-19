@@ -12,7 +12,16 @@ import {
 import * as Clipboard from "expo-clipboard";
 import React, { useEffect, useRef, useState } from "react";
 import { Keyboard, ToastAndroid } from "react-native";
-import { Button, Input, Paragraph, Switch, XStack, YStack } from "tamagui";
+import {
+  Button,
+  Input,
+  Label,
+  Paragraph,
+  RadioGroup,
+  Switch,
+  XStack,
+  YStack,
+} from "tamagui";
 
 interface PrimarySlidingMenuProps {
   roomName: string;
@@ -24,6 +33,7 @@ interface PrimarySlidingMenuProps {
   toggleAutoScroll: (value?: boolean) => void;
   wsConnected: boolean;
   wsService: WebSocketService;
+  speechRecognitionUsedModel: "expo" | "vosk";
   setRoomName: (text: string) => void;
   setRoomPass: (text: string) => void;
   setAlias: (text: string) => void;
@@ -31,6 +41,7 @@ interface PrimarySlidingMenuProps {
   disconnectWs: () => void;
   toggleQRIsVisible: (visible?: boolean) => void;
   toggleScanIsVisible: (visible?: boolean) => void;
+  changeSpeechRecognitionUsedModel: (model: "expo" | "vosk") => void;
 }
 
 export const PrimarySlidingMenu = React.memo(
@@ -48,9 +59,11 @@ export const PrimarySlidingMenu = React.memo(
     setAlias,
     connectWs,
     wsService,
+    speechRecognitionUsedModel,
     disconnectWs,
     toggleQRIsVisible,
     toggleScanIsVisible,
+    changeSpeechRecognitionUsedModel,
   }: PrimarySlidingMenuProps) => {
     const [slidingMenuPosition, setSlidingMenuPosition] = useState(0);
 
@@ -348,6 +361,59 @@ export const PrimarySlidingMenu = React.memo(
                 <Switch.Thumb animation={"quicker"} />
               </Switch>
             </XStack>
+          </YStack>
+
+          <YStack
+            gap={10}
+            borderWidth={1}
+            borderColor={"$borderColorHover"}
+            p={10}
+            rounded={"$4"}
+          >
+            <Paragraph color={"$color08"}>
+              Modelo de reconocimiento de voz
+            </Paragraph>
+            <RadioGroup
+              aria-labelledby="Select model"
+              value={speechRecognitionUsedModel}
+              onValueChange={(model) =>
+                changeSpeechRecognitionUsedModel(model as "expo" | "vosk")
+              }
+              name="modelForm"
+            >
+              <YStack>
+                <XStack items={"center"} gap="$4">
+                  <Label
+                    size={"$3"}
+                    color={
+                      speechRecognitionUsedModel === "vosk"
+                        ? "$color"
+                        : "$color06"
+                    }
+                  >
+                    Vosk
+                  </Label>
+                  <RadioGroup.Item size={"$4.5"} value="vosk">
+                    <RadioGroup.Indicator />
+                  </RadioGroup.Item>
+                </XStack>
+                <XStack items={"center"} gap="$4">
+                  <Label
+                    size={"$3"}
+                    color={
+                      speechRecognitionUsedModel === "expo"
+                        ? "$color"
+                        : "$color06"
+                    }
+                  >
+                    Expo
+                  </Label>
+                  <RadioGroup.Item size={"$4.5"} value="expo">
+                    <RadioGroup.Indicator />
+                  </RadioGroup.Item>
+                </XStack>
+              </YStack>
+            </RadioGroup>
           </YStack>
           {/* <Button
             mt={"auto"}

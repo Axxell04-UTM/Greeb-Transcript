@@ -22,6 +22,8 @@ export default class SpeechRecognitionService {
   micOn = false;
   subscriptions: any[] = [];
 
+  expoPermissGranted = false;
+
   result = "";
   partialResult = "";
 
@@ -47,6 +49,7 @@ export default class SpeechRecognitionService {
 
     const endEventExpo = ExpoSpeechRecognitionModule.addListener("end", () => {
       if (this.micOn) {
+        console.log("End__");
         this.expoRecord();
       }
     });
@@ -55,7 +58,8 @@ export default class SpeechRecognitionService {
       "error",
       () => {
         if (this.micOn) {
-          this.expoRecord();
+          // console.log("Error__");
+          // this.expoRecord();
         }
       },
     );
@@ -122,18 +126,48 @@ export default class SpeechRecognitionService {
     this.voskModelRecognizing = false;
   }
 
+  toogleOpenMic(open?: boolean) {
+    if (typeof open !== "undefined") {
+      this.micOn = open;
+    } else {
+      this.micOn = !this.micOn;
+    }
+
+    if (this.micOn) {
+      if (this.usedModel === "expo") {
+        this.expoRecord();
+      } else {
+        this.voskRecord();
+      }
+    } else {
+      this.expoRecordStop();
+      this.voskRecordStop();
+    }
+  }
+
   processRes(res: string) {
     const formatedRes: { text: string } = JSON.parse(res);
     return formatedRes.text;
   }
 
-  async expoRecord() {
+  async requestPermiss() {
     const permissRes =
       await ExpoSpeechRecognitionModule.requestPermissionsAsync();
     if (!permissRes.granted) {
       console.log("Permissions not granted", permissRes);
-      return;
+      this.expoPermissGranted = false;
+      return false;
     }
+    this.expoPermissGranted = true;
+    return true;
+  }
+
+  async expoRecord() {
+    if (!this.expoPermissGranted) {
+      if (!(await this.requestPermiss())) return;
+    }
+    this.expoModelRecognizing = true;
+    console.log("Start Expo Recognition...");
     ExpoSpeechRecognitionModule.start({
       lang: "es-CO",
       interimResults: true,
@@ -141,11 +175,18 @@ export default class SpeechRecognitionService {
     });
   }
 
+  expoRecordStop() {
+    if (!this.expoModelRecognizing) return;
+    ExpoSpeechRecognitionModule.stop();
+    console.log("Stoping Expo recognition...");
+    this.expoModelRecognizing = false;
+  }
+
   voskRecord() {
     vosk
       .start()
       .then(() => {
-        console.log("Start recognition...");
+        console.log("Start Vosk recognition...");
         this.voskModelRecognizing = true;
       })
       .catch((e) => console.error(e));
@@ -172,8 +213,9 @@ export default class SpeechRecognitionService {
   }
 
   voskRecordStop() {
+    if (!this.voskModelRecognizing) return;
     vosk.stop();
-    console.log("Stoping recognition...");
+    console.log("Stoping Vosk recognition...");
     this.voskModelRecognizing = false;
   }
 

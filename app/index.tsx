@@ -26,10 +26,6 @@ import { QRSlidingMenu } from "@/UI/Index/QRSlidingMenu";
 import { ScanSlidingMenu } from "@/UI/Index/ScanSlidingMenu";
 import { useRouter } from "expo-router";
 import {
-  ExpoSpeechRecognitionModule,
-  useSpeechRecognitionEvent,
-} from "expo-speech-recognition";
-import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -94,7 +90,12 @@ export default function Index() {
   );
 
   // SpeechRecognition
-  const SpeechRecognitionUsedModelRef = useRef<"expo" | "vosk">("vosk");
+  const [speechRecognitionUsedModel, setSpeechRecognitionUsedModel] = useState(
+    speechRecognitionServiceRef.current.usedModel,
+  );
+  const speechRecognitionUsedModelRef = useRef<"expo" | "vosk">(
+    speechRecognitionUsedModel,
+  );
 
   const [scanResult, setScanResult] = useState("");
 
@@ -115,59 +116,61 @@ export default function Index() {
   const [chatLogs, setChatLogs] = useState<ChatLogs>([]);
   const chatLogsRef = useRef(chatLogs);
 
-  useSpeechRecognitionEvent("start", () => setRecognizing(true));
-  useSpeechRecognitionEvent("end", () => {
-    if (micOn) {
-      recStart();
-    }
-  });
-  useSpeechRecognitionEvent("result", (e) => {
-    setTranscript(e.results[0]?.transcript);
-    if (e.isFinal) {
-      setListTranscript([...listTranscript, e.results[0]?.transcript]);
-      wsService.sendMessage({
-        type: "message",
-        text: e.results[0]?.transcript,
-      });
-    }
-  });
-  useSpeechRecognitionEvent("error", (e) => {
-    if (micOn) {
-      recStart();
-    }
-  });
+  // useSpeechRecognitionEvent("start", () => setRecognizing(true));
+  // useSpeechRecognitionEvent("end", () => {
+  //   if (micOn) {
+  //     recStart();
+  //   }
+  // });
+  // useSpeechRecognitionEvent("result", (e) => {
+  //   setTranscript(e.results[0]?.transcript);
+  //   if (e.isFinal) {
+  //     setListTranscript([...listTranscript, e.results[0]?.transcript]);
+  //     wsService.sendMessage({
+  //       type: "message",
+  //       text: e.results[0]?.transcript,
+  //     });
+  //   }
+  // });
+  // useSpeechRecognitionEvent("error", (e) => {
+  //   if (micOn) {
+  //     recStart();
+  //   }
+  // });
 
   // Funciones
   function openMic() {
     setMicOn(true);
+    speechRecognitionServiceRef.current.toogleOpenMic(true);
     // handleStart();
-    speechRecognitionServiceRef.current.voskRecord();
+    // speechRecognitionServiceRef.current.voskRecord();
     setRecognizing(true);
   }
 
   function closeMic() {
     setMicOn(false);
+    speechRecognitionServiceRef.current.toogleOpenMic(false);
     // ExpoSpeechRecognitionModule.stop();
-    speechRecognitionServiceRef.current.voskRecordStop();
+    // speechRecognitionServiceRef.current.voskRecordStop();
     setRecognizing(false);
   }
 
-  function recStart() {
-    ExpoSpeechRecognitionModule.start({
-      lang: "es-CO",
-      interimResults: true,
-      continuous: false,
-    });
-  }
+  // function recStart() {
+  //   ExpoSpeechRecognitionModule.start({
+  //     lang: "es-CO",
+  //     interimResults: true,
+  //     continuous: false,
+  //   });
+  // }
 
-  async function handleStart() {
-    const result = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
-    if (!result.granted) {
-      console.log("Permissions not granted", result);
-      return;
-    }
-    recStart();
-  }
+  // async function handleStart() {
+  //   const result = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+  //   if (!result.granted) {
+  //     console.log("Permissions not granted", result);
+  //     return;
+  //   }
+  //   recStart();
+  // }
 
   async function handleSendInputText() {
     wsService.sendMessage({
@@ -247,12 +250,28 @@ export default function Index() {
     }
   }
 
+  function changeSpeechRecognitionUsedModel(model: "expo" | "vosk") {
+    closeMic();
+    speechRecognitionServiceRef.current.changeUsedModel(model);
+    setSpeechRecognitionUsedModel(model);
+    // console.log(speechRecognitionServiceRef.current.usedModel);
+    ToastAndroid.show(
+      `Usando modelo ${model[0].toUpperCase()}${model.substring(1)}`,
+      ToastAndroid.SHORT,
+    );
+  }
+
   // Refresh functions
   function refreshChatLogHistoryList() {
     setChatLogHistoryList(
       chatLogHistoryServiceRef.current.getChatLogHistoryList(),
     );
   }
+
+  // Update refs
+  useEffect(() => {
+    speechRecognitionUsedModelRef.current = speechRecognitionUsedModel;
+  }, [speechRecognitionUsedModel]);
 
   // Actualizando la sala para la conexión WS
   useEffect(() => {
@@ -519,7 +538,8 @@ export default function Index() {
       };
 
       const handleChangeModel = (model: "expo" | "vosk") => {
-        SpeechRecognitionUsedModelRef.current = model;
+        // speechRecognitionUsedModelRef.current = model;
+        setSpeechRecognitionUsedModel(model);
       };
 
       service.onResult(handleRes);
@@ -698,6 +718,7 @@ export default function Index() {
         autoScroll={autoScroll}
         connectWs={connectWs}
         wsService={wsService}
+        speechRecognitionUsedModel={speechRecognitionUsedModel}
         disconnectWs={disconnectWs}
         setRoomName={setRoomName}
         setRoomPass={setRoomPass}
@@ -706,6 +727,7 @@ export default function Index() {
         wsConnected={wsConnected}
         toggleQRIsVisible={toggleQRSlidingMenuIsVisible}
         toggleScanIsVisible={toggleScanSlidingMenuIsVisible}
+        changeSpeechRecognitionUsedModel={changeSpeechRecognitionUsedModel}
       />
 
       {/* Second Sheet */}

@@ -1,7 +1,7 @@
 import { SlidingBottomMenu } from "@/components/SlidingBottomMenu";
 import { ChatLogHistory } from "@/interface/result_message";
 import ChatLogHistoryService from "@/services/ChatLogHistoryService";
-import { Download, Trash2 } from "@tamagui/lucide-icons";
+import { Share, Trash2 } from "@tamagui/lucide-icons";
 import React, { useState } from "react";
 import { ToastAndroid } from "react-native";
 import {
@@ -14,6 +14,12 @@ import {
   XStack,
   YStack,
 } from "tamagui";
+
+import { File, Paths } from "expo-file-system/next";
+
+import * as FileSystem from "expo-file-system";
+
+import * as Sharing from "expo-sharing";
 
 interface HistorySlidingMenuProps {
   isVisible: boolean;
@@ -61,6 +67,73 @@ export const HistorySlidingMenu = React.memo(
         setChatLogHistorySelected(null);
       }
     }
+
+    async function handleShare(clh: ChatLogHistory) {
+      const uriChatLog = Paths.join(
+        chatLogHistoryServiceRef.current.pathToSave,
+        `${clh.createdAt}.json`,
+      );
+      const fileTxt = await proccessFile(clh);
+      Sharing.shareAsync(fileTxt.uri, {
+        dialogTitle: `ChatLog ${clh.roomName} | ${new Date(clh.createdAt).toLocaleString()}`,
+        mimeType: "text/plain",
+        // mimeType: "text/plain; charset=utf-8",
+      });
+    }
+
+    async function handleDownload(clh: ChatLogHistory) {
+      const permiss =
+        await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync(
+          "Download",
+        );
+
+      if (!permiss.granted) {
+        console.log("Permisos no concedidos");
+        return;
+      }
+
+      const fileName = `${clh.roomName} | ${new Date(clh.createdAt).toLocaleString()}`;
+      const fileTxt = proccessFile(clh);
+
+      const fileUri = await FileSystem.StorageAccessFramework.createFileAsync(
+        permiss.directoryUri,
+        fileName,
+        "text/plain",
+      );
+
+      await FileSystem.writeAsStringAsync(fileUri, fileTxt.text(), {
+        encoding: FileSystem.EncodingType.UTF8,
+      });
+      console.log(`${fileName} guardado en ${fileUri}`);
+      ToastAndroid.show(
+        `${fileName} guardado en el dispositivo`,
+        ToastAndroid.SHORT,
+      );
+    }
+
+    function proccessFile(clh: ChatLogHistory) {
+      const fileTxt = new File(
+        Paths.join(
+          Paths.cache,
+          `${clh.roomName}_${clh.alias}_${clh.createdAt}.txt`,
+        ),
+      );
+      let content = `Fecha: ${new Date(clh.createdAt).toLocaleString()} \nSala: ${clh.roomName} | Alias: ${clh.alias}\n`;
+      for (const cl of clh.chatLogs) {
+        if (cl.type === "package") {
+          content = content.concat(
+            `${new Date(cl.createdAt).toLocaleTimeString()} - ${cl.owner}: `,
+          );
+          for (const msg of cl.messages) {
+            content = content.concat(`${msg.content} `);
+          }
+          content = content.concat("\n");
+        }
+      }
+      fileTxt.write(content);
+      return fileTxt;
+    }
+
     if (!isVisible) return null;
     return (
       <SlidingBottomMenu
@@ -179,7 +252,11 @@ export const HistorySlidingMenu = React.memo(
                         </AlertDialog.Portal>
                       </AlertDialog>
                       <Theme name={"accent"}>
-                        <Button px={"$2"} icon={<Download size={"$2"} />} />
+                        <Button
+                          px={"$2"}
+                          icon={<Share size={"$2"} />}
+                          onPress={() => handleShare(clh)}
+                        />
                       </Theme>
                     </XStack>
                   </XStack>
