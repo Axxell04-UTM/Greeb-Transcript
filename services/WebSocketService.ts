@@ -12,6 +12,7 @@ type WebSocketEvents = {
   wsState: (connected: boolean) => void;
   wsMessageResult: (message: ResultMessage) => void;
   wsMessageServer: (reason: string) => void;
+  wsLoadingConnection: (loadingConnection: boolean) => void;
 };
 
 const myEmitter = new EventEmitter<WebSocketEvents>();
@@ -29,9 +30,9 @@ export default class WebSocketService {
     password: string,
     alias: string,
   ) {
-    this.loadingConnection = true;
+    this.setLoadingConnection(true);
     setTimeout(() => {
-      this.loadingConnection = false;
+      this.setLoadingConnection(false);
     }, 5000);
     if (!this.connection) {
       url = url.replace("https", "wss");
@@ -90,17 +91,13 @@ export default class WebSocketService {
             wsMessageServer.code === "created" ||
             wsMessageServer.code === "joined"
           ) {
-            this.loadingConnection = false;
             this.myAlias = alias;
             if (wsMessageServer.alias === alias) {
               myEmitter.emit("wsState", true);
+              this.setLoadingConnection(false);
               setTimeout(() => {
                 this.sendMessage({ type: "ping" });
               }, 1000);
-
-              if (this.connection) {
-                this.initOnClose();
-              }
             }
             const createdAt = Date.now();
             myEmitter.emit("wsMessageResult", {
@@ -133,41 +130,19 @@ export default class WebSocketService {
         } else if (wsMessageServer.code === "auth_required") {
           reason = "Se requiere autenticación";
         }
-        this.loadingConnection = false;
         myEmitter.emit("wsMessageServer", reason);
       }
     };
 
     this.connection.onopen = (e) => {
-      // myEmitter.emit("wsState", true);
-      // console.log("Open: ", e);
       this.sendMessage({ action: action, password: password, alias: alias });
     };
-    // this.connection.onclose = (e) => {
-    //   // console.log("Close: ", e);
-    //   myEmitter.emit("wsState", false);
-    // };
-  }
 
-  disconnect() {
-    if (!this.connection) {
-      return;
-    }
-    this.loadingConnection = true;
-    this.connection.close(1000, "Desconexión voluntaria");
-
-    // myEmitter.emit("wsState", false);
-
-    console.log("Desconexión voluntaria");
-    this.loadingConnection = false;
-  }
-
-  initOnClose() {
-    if (!this.connection) return;
-    console.log("OnClose inicializado");
     this.connection.onclose = (e) => {
+      // this.setLoadingConnection(true);
       console.log("Desconectando: ", e);
       myEmitter.emit("wsState", false);
+      this.setLoadingConnection(false);
       const createdAt = Date.now();
       myEmitter.emit("wsMessageResult", {
         from: this.myAlias ?? "",
@@ -177,6 +152,21 @@ export default class WebSocketService {
       });
       this.myAlias = null;
     };
+  }
+
+  disconnect() {
+    if (!this.connection) {
+      return;
+    }
+    this.setLoadingConnection(true);
+    this.connection.close(1000, "Desconexión voluntaria");
+
+    console.log("Desconexión voluntaria");
+  }
+
+  setLoadingConnection(loading: boolean) {
+    this.loadingConnection = loading;
+    myEmitter.emit("wsLoadingConnection", loading);
   }
 
   async sendMessage(message: WsMessageOut | WSConnectionMessage) {
@@ -217,6 +207,10 @@ export default class WebSocketService {
     myEmitter.addListener("wsMessageServer", callback);
   }
 
+  onLoadingConnection(callback: (loadingConnection: boolean) => void) {
+    myEmitter.addListener("wsLoadingConnection", callback);
+  }
+
   removeStateListener(callback: (connected: boolean) => void) {
     myEmitter.removeListener("wsState", callback);
   }
@@ -227,6 +221,10 @@ export default class WebSocketService {
 
   removeMessageServerListener(callback: (reason: string) => void) {
     myEmitter.removeListener("wsMessageServer", callback);
+  }
+
+  removeLoadingConnection(callback: (loadingConnection: boolean) => void) {
+    myEmitter.removeListener("wsLoadingConnection", callback);
   }
 
   static getInstance(): WebSocketService {
