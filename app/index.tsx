@@ -79,6 +79,7 @@ export default function Index() {
   const [roomNameQR, setRoomNameQR] = useState<any>();
 
   const [wsConnected, setWsConnected] = useState(false);
+  const [loadingConnection, setLoadingConnection] = useState(false);
 
   // Services
   const [wsService, setWsService] = useState(WebSocketService.getInstance());
@@ -296,12 +297,13 @@ export default function Index() {
       const handleState = (connected: boolean) => {
         setWsConnected(connected);
         if (connected) {
+          toggleScanSlidingMenuIsVisible(false);
+          togglePrimarySlidingMenuIsVisible(false);
           ToastAndroid.show("Conexión establecida", ToastAndroid.SHORT);
           setChatLogHistoryList(
             chatLogHistoryServiceRef.current.getChatLogHistoryList(),
           );
-          toggleScanSlidingMenuIsVisible(false);
-          togglePrimarySlidingMenuIsVisible(false);
+
           chatLogHistoryServiceRef.current.createNewChatLogHistory(
             roomNameRef.current,
             aliasRef.current,
@@ -313,7 +315,7 @@ export default function Index() {
             chatLogHistoryServiceRef.current.getChatLogHistoryList(),
           );
           chatLogHistoryServiceRef.current.leftChatLogHistory();
-          // console.log(chatLogsRef.current);
+          console.log(chatLogsRef.current);
         }
       };
 
@@ -325,13 +327,19 @@ export default function Index() {
         ToastAndroid.show(reason, ToastAndroid.SHORT);
       };
 
+      const handleLoadingConnection = (loadingConnection: boolean) => {
+        setLoadingConnection(loadingConnection);
+      };
+
       wsService.onState(handleState);
       wsService.onMessage(handleMessage);
       wsService.onMessageServer(handleMessageServer);
+      wsService.onLoadingConnection(handleLoadingConnection);
       return () => {
         wsService.removeStateListener(handleState);
         wsService.removeMessageListener(handleMessage);
         wsService.removeMessageServerListener(handleMessageServer);
+        wsService.removeLoadingConnection(handleLoadingConnection);
       };
     }
   }, [wsService]);
@@ -725,6 +733,7 @@ export default function Index() {
         setAlias={setAlias}
         toggleAutoScroll={toggleAutoScroll}
         wsConnected={wsConnected}
+        loadingConnection={loadingConnection}
         toggleQRIsVisible={toggleQRSlidingMenuIsVisible}
         toggleScanIsVisible={toggleScanSlidingMenuIsVisible}
         changeSpeechRecognitionUsedModel={changeSpeechRecognitionUsedModel}
