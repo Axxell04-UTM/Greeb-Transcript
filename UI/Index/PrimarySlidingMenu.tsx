@@ -18,6 +18,7 @@ import {
   Label,
   Paragraph,
   RadioGroup,
+  Spinner,
   Switch,
   XStack,
   YStack,
@@ -32,6 +33,7 @@ interface PrimarySlidingMenuProps {
   autoScroll: boolean;
   toggleAutoScroll: (value?: boolean) => void;
   wsConnected: boolean;
+  loadingConnection: boolean;
   wsService: WebSocketService;
   speechRecognitionUsedModel: "expo" | "vosk";
   setRoomName: (text: string) => void;
@@ -54,6 +56,7 @@ export const PrimarySlidingMenu = React.memo(
     autoScroll,
     toggleAutoScroll,
     wsConnected,
+    loadingConnection,
     setRoomName,
     setRoomPass,
     setAlias,
@@ -144,6 +147,10 @@ export const PrimarySlidingMenu = React.memo(
     //   };
     // }, []);
 
+    useEffect(() => {
+      console.log(isVisible);
+    }, [isVisible]);
+
     if (!isVisible) return null;
 
     return (
@@ -169,7 +176,9 @@ export const PrimarySlidingMenu = React.memo(
               <Paragraph ml={"auto"} color={"$color08"}>
                 En línea
               </Paragraph>
-              {wsConnected ? (
+              {loadingConnection ? (
+                <Spinner color={"$white1"} size="small" />
+              ) : wsConnected ? (
                 <CircleCheck color={"$green10"} size={20} />
               ) : (
                 <CircleX color={"$red11"} size={20} />
