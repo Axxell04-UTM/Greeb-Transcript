@@ -8,10 +8,38 @@ import { useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TamaguiProvider, Theme } from "tamagui";
 
+// Fonts
+import {
+  DMSans_100Thin,
+  DMSans_200ExtraLight_Italic,
+  DMSans_300Light,
+  DMSans_300Light_Italic,
+  DMSans_400Regular,
+  DMSans_500Medium,
+  DMSans_600SemiBold,
+  DMSans_700Bold,
+} from "@expo-google-fonts/dm-sans";
+import { RacingSansOne_400Regular } from "@expo-google-fonts/racing-sans-one";
+import { useFonts } from "expo-font";
+
 // Create the full Tamagui config instance
 // const tamaguiConfig = createTamagui(config);
 
 export default function RootLayout() {
+  // Cargando Fuentes
+  const [fontsLoaded] = useFonts({
+    RacingSansOne_400Regular,
+
+    DMSans_100Thin,
+    DMSans_200ExtraLight_Italic,
+    DMSans_300Light,
+    DMSans_300Light_Italic,
+    DMSans_400Regular,
+    DMSans_500Medium,
+    DMSans_600SemiBold,
+    DMSans_700Bold,
+  });
+
   const router = useRouter();
   const storeData = async (key: string, value: string) => {
     try {

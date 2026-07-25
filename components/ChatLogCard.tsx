@@ -34,6 +34,7 @@ export const ChatLogCard = React.memo(
         text={"center"}
         width={"100%"}
         my={"$3"}
+        style={{ fontFamily: "DMSans_300Light_Italic" }}
       >
         {(chatLog as AlertMessage).content}
       </Paragraph>
@@ -44,13 +45,16 @@ export const ChatLogCard = React.memo(
           key={index}
           bg={"$background"}
           px={"$2"}
+          py={"$2"}
           rounded={"$2"}
           height={"min-content"}
           self={"flex-start"}
+          style={{ fontFamily: "DMSans_300Light" }}
         >
           <Text
-            fontWeight={"bold"}
+            // fontWeight={"bold"}
             color={"$green11"}
+            style={{ fontFamily: "RacingSansOne_400Regular" }}
           >{`${chatLog.owner}: `}</Text>
           {totalMessagesRef.current}
         </Text>
