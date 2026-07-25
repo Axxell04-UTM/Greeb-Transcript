@@ -65,7 +65,11 @@ export const ScanSlidingMenu = React.memo(
                 barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
                 onBarcodeScanned={(res) => handleQRScanned(res)}
               ></CameraView>
-              <Paragraph color={"$color06"} text={"center"}>
+              <Paragraph
+                color={"$color06"}
+                text={"center"}
+                style={{ fontFamily: "DMSans_600SemiBold" }}
+              >
                 Enfoque su QR
               </Paragraph>
             </YStack>

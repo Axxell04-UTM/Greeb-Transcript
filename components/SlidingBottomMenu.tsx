@@ -99,7 +99,14 @@ export const SlidingBottomMenu = React.memo(
               >
                 <ChevronDown size={"$3"} />
               </Button>
-              {title && <Paragraph fontSize={18}>{title}</Paragraph>}
+              {title && (
+                <Paragraph
+                  fontSize={22}
+                  style={{ fontFamily: "RacingSansOne_400Regular" }}
+                >
+                  {title}
+                </Paragraph>
+              )}
             </XStack>
             <YStack flex={1}>
               <ScrollView flex={1}>{children}</ScrollView>

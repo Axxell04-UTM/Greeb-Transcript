@@ -1,6 +1,6 @@
 import { ChatLogHistory } from "@/interface/result_message";
 import React from "react";
-import { Button, ScrollView, XStack } from "tamagui";
+import { Button, ScrollView, Text, XStack } from "tamagui";
 
 interface ChatLogHistoryBarProps {
   chatLogHistoryList: ChatLogHistory[];
@@ -37,7 +37,7 @@ export const ChatLogHistoryBar = React.memo(
           px={"$3"}
           onPress={() => handleSelect(null)}
         >
-          En vivo
+          <Text style={{ fontFamily: "DMSans_300Light" }}>En vivo</Text>
         </Button>
         <ScrollView
           horizontal
@@ -59,11 +59,13 @@ export const ChatLogHistoryBar = React.memo(
                   key={clh.createdAt}
                   onPress={() => handleSelect(clh)}
                 >
-                  {`${clh.roomName} | ${new Date(clh.createdAt).toLocaleString()}`}
+                  <Text style={{ fontFamily: "DMSans_300Light" }}>
+                    {`${clh.roomName} | ${new Date(clh.createdAt).toLocaleString()}`}
+                  </Text>
                 </Button>
               ))}
             <Button bg={"$background0"} px={"$3"} onPress={openHistory}>
-              Ver más...
+              <Text style={{ fontFamily: "DMSans_300Light" }}>Ver más...</Text>
             </Button>
           </XStack>
         </ScrollView>

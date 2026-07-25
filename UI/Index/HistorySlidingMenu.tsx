@@ -175,11 +175,18 @@ export const HistorySlidingMenu = React.memo(
                   >
                     <YStack justify={"center"} items={"center"} flex={1}>
                       <XStack gap={"$3"}>
-                        <Text>{clh.roomName}</Text>
+                        <Text style={{ fontFamily: "DMSans_600SemiBold" }}>
+                          {clh.roomName}
+                        </Text>
                         <Separator vertical />
-                        <Text>{clh.alias}</Text>
+                        <Text style={{ fontFamily: "DMSans_600SemiBold" }}>
+                          {clh.alias}
+                        </Text>
                       </XStack>
-                      <Text color={"$color06"}>
+                      <Text
+                        color={"$color06"}
+                        style={{ fontFamily: "DMSans_300Light_Italic" }}
+                      >
                         {new Date(clh.createdAt).toLocaleString()}
                       </Text>
                     </YStack>
