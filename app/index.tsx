@@ -5,6 +5,7 @@ import {
   Paragraph,
   ScrollView,
   Separator,
+  Text,
   TextArea,
   XStack,
   YStack,
@@ -602,7 +603,12 @@ export default function Index() {
             Invitado
           </Button> */}
               <XStack items={"center"} justify={"flex-start"} gap={10} flex={1}>
-                <Paragraph fontSize={20}>Greeb Transcript</Paragraph>
+                <Paragraph
+                  fontSize={25}
+                  style={{ fontFamily: "RacingSansOne_400Regular" }}
+                >
+                  Greeb Transcript
+                </Paragraph>
               </XStack>
               <Button
                 icon={<Menu size={"$2.5"} />}
@@ -623,15 +629,27 @@ export default function Index() {
                 width={"100%"}
               >
                 <XStack justify={"flex-start"} mb={"$2"}>
-                  <Paragraph color={"$colorHover"}>
-                    Sala - {roomName && wsConnected ? roomName : "Local"}
+                  <Paragraph
+                    color={"$colorHover"}
+                    style={{ fontFamily: "DMSans_300Light" }}
+                  >
+                    Sala -{" "}
+                    <Text style={{ fontFamily: "DMSans_400Regular" }}>
+                      {roomName && wsConnected ? roomName : "Local"}
+                    </Text>
                   </Paragraph>
                   <Separator self={"stretch"} vertical mx={"$3"} />
-                  <Paragraph color={"$colorHover"}>
-                    Alias - {alias && wsConnected ? alias : "Ninguno"}
+                  <Paragraph
+                    color={"$colorHover"}
+                    style={{ fontFamily: "DMSans_300Light" }}
+                  >
+                    Alias -{" "}
+                    <Text style={{ fontFamily: "DMSans_400Regular" }}>
+                      {alias && wsConnected ? alias : "Ninguno"}
+                    </Text>
                   </Paragraph>
                 </XStack>
-                <ScrollView overflow="hidden" ref={scrollViewRef}>
+                <ScrollView ref={scrollViewRef}>
                   <YStack
                     gap={"$1.5"}
                     // overflow="hidden"
@@ -676,7 +694,11 @@ export default function Index() {
             </YStack>
             {/* <TestVosk /> */}
             <XStack gap={"$2"} items={"center"} px={"$3"}>
-              <Paragraph text={"left"} flex={1}>
+              <Paragraph
+                text={"left"}
+                flex={1}
+                style={{ fontFamily: "DMSans_400Regular" }}
+              >
                 {transcript === "" ? "..." : transcript}
               </Paragraph>
               <Button
@@ -703,6 +725,7 @@ export default function Index() {
                 onChangeText={(text) => setInputText(text)}
                 maxH={"$6"}
                 p={"$2"}
+                style={{ fontFamily: "DMSans_500Medium" }}
               />
               <Button
                 p={10}

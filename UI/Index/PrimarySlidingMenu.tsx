@@ -20,6 +20,7 @@ import {
   RadioGroup,
   Spinner,
   Switch,
+  Text,
   XStack,
   YStack,
 } from "tamagui";
@@ -172,8 +173,17 @@ export const PrimarySlidingMenu = React.memo(
             rounded={"$4"}
           >
             <XStack items={"center"} gap={10}>
-              <Paragraph color={"$color08"}>Sala</Paragraph>
-              <Paragraph ml={"auto"} color={"$color08"}>
+              <Paragraph
+                color={"$color08"}
+                style={{ fontFamily: "DMSans_600SemiBold" }}
+              >
+                Sala
+              </Paragraph>
+              <Paragraph
+                ml={"auto"}
+                color={"$color08"}
+                style={{ fontFamily: "DMSans_600SemiBold" }}
+              >
                 En línea
               </Paragraph>
               {loadingConnection ? (
@@ -199,6 +209,7 @@ export const PrimarySlidingMenu = React.memo(
                       returnKeyType="next"
                       onSubmitEditing={() => input2.current?.focus()}
                       submitBehavior="submit"
+                      style={{ fontFamily: "DMSans_400Regular" }}
                     />
                   </XStack>
                   <XStack gap={"$2"} items={"center"}>
@@ -216,6 +227,7 @@ export const PrimarySlidingMenu = React.memo(
                       returnKeyType="next"
                       onSubmitEditing={() => input3.current?.focus()}
                       submitBehavior="submit"
+                      style={{ fontFamily: "DMSans_400Regular" }}
                     />
                   </XStack>
                 </YStack>
@@ -230,6 +242,7 @@ export const PrimarySlidingMenu = React.memo(
                       onChangeText={(text) => handleAlias(text)}
                       disabled={wsConnected}
                       onFocus={() => setSlidingMenuPosition(0)}
+                      style={{ fontFamily: "DMSans_400Regular" }}
                     />
                     {!wsConnected ? (
                       <Button
@@ -280,11 +293,15 @@ export const PrimarySlidingMenu = React.memo(
                     onPress={() => handleConnectWs("create")}
                     variant="outlined"
                   >
-                    {wsConnected ? "Desconectar" : "Crear sala"}
+                    <Text style={{ fontFamily: "DMSans_600SemiBold" }}>
+                      {wsConnected ? "Desconectar" : "Crear sala"}
+                    </Text>
                   </Button>
                 )}
                 <Button flex={1} onPress={() => handleConnectWs("join")}>
-                  {wsConnected ? "Desconectar" : "Unirse a sala"}
+                  <Text style={{ fontFamily: "DMSans_600SemiBold" }}>
+                    {wsConnected ? "Desconectar" : "Unirse a sala"}
+                  </Text>
                 </Button>
               </XStack>
             </YStack>
@@ -359,9 +376,16 @@ export const PrimarySlidingMenu = React.memo(
             p={10}
             rounded={"$4"}
           >
-            <Paragraph color={"$color08"}>Ajustes</Paragraph>
+            <Paragraph
+              color={"$color08"}
+              style={{ fontFamily: "DMSans_600SemiBold" }}
+            >
+              Ajustes
+            </Paragraph>
             <XStack gap={20} items={"center"}>
-              <Paragraph>Auto-Scroll</Paragraph>
+              <Paragraph style={{ fontFamily: "DMSans_400Regular" }}>
+                Auto-Scroll
+              </Paragraph>
               <Switch
                 bg={autoScroll ? "$colorFocus" : "$background"}
                 checked={autoScroll}
@@ -379,7 +403,10 @@ export const PrimarySlidingMenu = React.memo(
             p={10}
             rounded={"$4"}
           >
-            <Paragraph color={"$color08"}>
+            <Paragraph
+              color={"$color08"}
+              style={{ fontFamily: "DMSans_600SemiBold" }}
+            >
               Modelo de reconocimiento de voz
             </Paragraph>
             <RadioGroup
@@ -399,6 +426,7 @@ export const PrimarySlidingMenu = React.memo(
                         ? "$color"
                         : "$color06"
                     }
+                    style={{ fontFamily: "DMSans_400Regular" }}
                   >
                     Vosk
                   </Label>
@@ -414,6 +442,7 @@ export const PrimarySlidingMenu = React.memo(
                         ? "$color"
                         : "$color06"
                     }
+                    style={{ fontFamily: "DMSans_400Regular" }}
                   >
                     Expo
                   </Label>
