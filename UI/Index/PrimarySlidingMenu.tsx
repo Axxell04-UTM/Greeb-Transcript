@@ -32,6 +32,8 @@ interface PrimarySlidingMenuProps {
   isVisible: boolean;
   toggleIsVisible: (visible?: boolean) => void;
   autoScroll: boolean;
+  accumulatedMessages: boolean;
+  toggleAccumulatedMessages: (value?: boolean) => void;
   toggleAutoScroll: (value?: boolean) => void;
   wsConnected: boolean;
   loadingConnection: boolean;
@@ -56,6 +58,8 @@ export const PrimarySlidingMenu = React.memo(
     toggleIsVisible,
     autoScroll,
     toggleAutoScroll,
+    accumulatedMessages,
+    toggleAccumulatedMessages,
     wsConnected,
     loadingConnection,
     setRoomName,
@@ -390,6 +394,18 @@ export const PrimarySlidingMenu = React.memo(
                 bg={autoScroll ? "$colorFocus" : "$background"}
                 checked={autoScroll}
                 onCheckedChange={(c) => toggleAutoScroll(c)}
+              >
+                <Switch.Thumb animation={"quicker"} />
+              </Switch>
+            </XStack>
+            <XStack gap={20} items={"center"}>
+              <Paragraph style={{ fontFamily: "DMSans_400Regular" }}>
+                Mensajes acumulados
+              </Paragraph>
+              <Switch
+                bg={accumulatedMessages ? "$colorFocus" : "$background"}
+                checked={accumulatedMessages}
+                onCheckedChange={(c) => toggleAccumulatedMessages(c)}
               >
                 <Switch.Thumb animation={"quicker"} />
               </Switch>
