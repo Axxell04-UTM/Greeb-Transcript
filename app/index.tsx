@@ -63,6 +63,7 @@ export default function Index() {
 
   // Ajustes
   const [autoScroll, setAutoScroll] = useState(true);
+  const [accumulatedMessages, setAccumulatedMessages] = useState(true);
 
   // Keyboard
   const [keyboardVerticalOffset, setKeyboardVerticalOffset] = useState(0);
@@ -220,6 +221,14 @@ export default function Index() {
     }
   }
 
+  function toggleAccumulatedMessages(value?: boolean) {
+    if (value !== undefined) {
+      setAccumulatedMessages(value);
+    } else {
+      setAccumulatedMessages((prev) => !prev);
+    }
+  }
+
   function togglePrimarySlidingMenuIsVisible(visible?: boolean) {
     if (visible !== undefined) {
       setPrimarySlidingMenuIsVisible(visible);
@@ -286,10 +295,10 @@ export default function Index() {
 
   // AutoScroll
   useEffect(() => {
-    if (scrollViewRef && autoScroll && wsConnected) {
+    if (scrollViewRef && autoScroll) {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }
-  }, [listMessageTranscript, autoScroll, wsConnected]);
+  }, [listMessageTranscript, autoScroll]);
 
   useEffect(() => {
     if (wsService) {
@@ -403,6 +412,19 @@ export default function Index() {
     listMessageTranscript
       .filter((msg) => msg.from !== undefined)
       .forEach((msg, index) => {
+        if (!accumulatedMessages) {
+          if (msg.type === "chat_message") {
+            pm = {
+              owner: msg.from,
+              messages: [msg],
+              type: "package",
+              createdAt: msg.createdAt,
+            };
+            newLogs = [...newLogs, pm];
+            return;
+          }
+        }
+
         if (msg.type === "chat_message") {
           if (!pm) {
             pm = {
@@ -486,7 +508,7 @@ export default function Index() {
     //   newLogs = [...newLogs, pm];
     // }
     setChatLogs(newLogs);
-  }, [listMessageTranscript]);
+  }, [listMessageTranscript, accumulatedMessages]);
 
   useEffect(() => {
     chatLogsRef.current = chatLogs;
@@ -747,6 +769,7 @@ export default function Index() {
         roomPass={roomPass}
         alias={alias}
         autoScroll={autoScroll}
+        accumulatedMessages={accumulatedMessages}
         connectWs={connectWs}
         wsService={wsService}
         speechRecognitionUsedModel={speechRecognitionUsedModel}
@@ -755,6 +778,7 @@ export default function Index() {
         setRoomPass={setRoomPass}
         setAlias={setAlias}
         toggleAutoScroll={toggleAutoScroll}
+        toggleAccumulatedMessages={toggleAccumulatedMessages}
         wsConnected={wsConnected}
         loadingConnection={loadingConnection}
         toggleQRIsVisible={toggleQRSlidingMenuIsVisible}
