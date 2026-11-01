@@ -43,3 +43,6 @@ yarn-error.*
 app-example
 
 .env
+
+# Artefactos locales generados por gentle-ai (rutas absolutas de la máquina)
+.atl/

@@ -3,6 +3,7 @@ import { config } from "@/tamagui.config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Crypto from "expo-crypto";
 import { Stack, useRouter } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -25,9 +26,12 @@ import { useFonts } from "expo-font";
 // Create the full Tamagui config instance
 // const tamaguiConfig = createTamagui(config);
 
+// Mantener el splash nativo visible hasta que las fuentes resuelvan (o fallen).
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
 export default function RootLayout() {
   // Cargando Fuentes
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     RacingSansOne_400Regular,
 
     DMSans_100Thin,
@@ -72,6 +76,24 @@ export default function RootLayout() {
     backManager.setNavigationChecker(() => router.canGoBack());
     console.log(router.canGoBack());
   }, [router]);
+
+  // Ocultar el splash apenas tengamos un resultado definitivo de las fuentes.
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [fontsLoaded, fontError]);
+
+  useEffect(() => {
+    if (fontError) {
+      console.warn("Font loading failed, falling back to system fonts", fontError);
+    }
+  }, [fontError]);
+
+  // Bloquear el render solo mientras el resultado de las fuentes sea desconocido.
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
 
   return (
     <TamaguiProvider config={config}>
